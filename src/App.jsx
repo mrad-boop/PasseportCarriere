@@ -1844,9 +1844,6 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
     showToast("Série supprimée.","info");
   };
 
-  const API = "https://pc-backend-rr9v.onrender.com";
-  const authH = () => ({"Content-Type":"application/json","Authorization":`Bearer ${localStorage.getItem("pc_token")}`});
-
   const updateUser=(id,changes)=>{
     fetch(`${API}/api/users/${id}`,{method:"PUT",headers:authH(),body:JSON.stringify(changes)})
       .then(r=>r.json())
