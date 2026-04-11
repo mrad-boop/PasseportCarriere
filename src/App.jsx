@@ -89,10 +89,7 @@ const LS = {
 ═══════════════════════════════════════════════════════════════ */
 const ADMIN_CREDS = { email:"admin@launchpad.ca", password:"Admin2026!" };
 
-const INIT_USERS = [
-  {id:1,nom:"Mourad Benali",email:"mourad@email.com",password:"Test1234!",pays:"DZ",plan:"premium",status:"actif",joined:"2026-01-15",lastLogin:"2026-04-09"},
-  {id:2,nom:"Fatima Zahra", email:"fatima@email.com", password:"Test1234!",pays:"MA",plan:"free",   status:"actif",joined:"2026-02-03",lastLogin:"2026-04-08"},
-];
+const INIT_USERS = [];
 
 const PAYS_LIST = [
   {code:"CA",flag:"🇨🇦",name:"Canada"},{code:"DZ",flag:"🇩🇿",name:"Algérie"},
@@ -678,7 +675,29 @@ function LoginPage({onSuccess,onAdminLogin,onRegister,users,successMsg}) {
     if(!email||!pwd) return setErr("Email et mot de passe requis.");
     setLoading(true);
     // Admin local
-    if(email===ADMIN_CREDS.email&&pwd===ADMIN_CREDS.password){setLoading(false);return onAdminLogin();}
+    // Admin — récupère un token depuis le backend
+    if(email===ADMIN_CREDS.email&&pwd===ADMIN_CREDS.password){
+      try {
+        const res = await fetch("https://pc-backend-rr9v.onrender.com/api/auth/login",{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({email,password:pwd})
+        });
+        const data = await res.json();
+        if(data.token){
+          localStorage.setItem("pc_token", data.token);
+          // Recharger les users maintenant qu'on a le token
+          fetch("https://pc-backend-rr9v.onrender.com/api/users",{
+            headers:{"Content-Type":"application/json","Authorization":`Bearer ${data.token}`}
+          }).then(r=>r.json()).then(d=>{if(Array.isArray(d))setUsers(d);}).catch(()=>{});
+          // Recharger les séries
+          fetch("https://pc-backend-rr9v.onrender.com/api/series",{
+            headers:{"Content-Type":"application/json","Authorization":`Bearer ${data.token}`}
+          }).then(r=>r.json()).then(d=>{if(Array.isArray(d)&&d.length>0)setSeries(d);}).catch(()=>{});
+        }
+      } catch {}
+      setLoading(false);
+      return onAdminLogin();
+    }
     try {
       const res = await fetch("https://pc-backend-rr9v.onrender.com/api/auth/login", {
         method:"POST", headers:{"Content-Type":"application/json"},
@@ -1810,13 +1829,26 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
     showToast("Série supprimée.","info");
   };
 
+  const API = "https://pc-backend-rr9v.onrender.com";
+  const authH = () => ({"Content-Type":"application/json","Authorization":`Bearer ${localStorage.getItem("pc_token")}`});
+
   const updateUser=(id,changes)=>{
-    setUsers(prev=>{const n=prev.map(u=>u.id===id?{...u,...changes}:u);LS.set("lp_users",n);return n;});
-    showToast("Utilisateur mis à jour.");
+    fetch(`${API}/api/users/${id}`,{method:"PUT",headers:authH(),body:JSON.stringify(changes)})
+      .then(r=>r.json())
+      .then(()=>{
+        setUsers(prev=>prev.map(u=>u.id===id?{...u,...changes}:u));
+        showToast("Utilisateur mis à jour.");
+      })
+      .catch(()=>showToast("Erreur lors de la mise à jour.","error"));
   };
   const deleteUser=id=>{
-    setUsers(prev=>{const n=prev.filter(u=>u.id!==id);LS.set("lp_users",n);return n;});
-    showToast("Utilisateur supprimé.","info");
+    fetch(`${API}/api/users/${id}`,{method:"DELETE",headers:authH()})
+      .then(r=>r.json())
+      .then(()=>{
+        setUsers(prev=>prev.filter(u=>u.id!==id));
+        showToast("Utilisateur supprimé.","info");
+      })
+      .catch(()=>showToast("Erreur lors de la suppression.","error"));
   };
 
   const SeriesTable = ({list,typeLabel,typeKey}) => (
