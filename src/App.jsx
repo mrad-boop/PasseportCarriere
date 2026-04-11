@@ -314,6 +314,16 @@ const INIT_SITE_CONFIG = {
   heroSubtitle: "80 séries d'entraînement, scoring officiel A1→C2, correction instantanée. La plateforme utilisée par des milliers de candidats francophones.",
   ctaPrimary: "Commencer gratuitement →",
   ctaSecondary: "J'ai déjà un compte",
+  // Stats hero
+  stat1Val: "80",    stat1Label: "Séries",
+  stat2Val: "3 120", stat2Label: "Questions",
+  stat3Val: "699",   stat3Label: "Points max",
+  stat4Val: "A1→C2", stat4Label: "Niveaux",
+  // Trust badges
+  trust1: "✓ 3 séries gratuites",
+  trust2: "✓ Correction détaillée",
+  trust3: "✓ Score officiel",
+  // Sections
   avantagesTitle: "Nos Avantages",
   avantagesSubtitle: "Tout ce dont vous avez besoin pour réussir votre TCF Canada",
   packsTitle: "PACKS DE RÉVISION",
@@ -322,7 +332,12 @@ const INIT_SITE_CONFIG = {
   testimonialsSubtitle: "Des résultats réels d'apprenants Passeport Carrière",
   ctaFinalTitle: "Prêt à décrocher votre visa ?",
   ctaFinalDesc: "Rejoignez des milliers d'immigrants qui se préparent avec Passeport Carrière. Inscription gratuite.",
+  // Footer
   footerCopyright: "© 2026 Passeport Carrière",
+  footerRight: "TCF Canada · Immigration francophone",
+  // Modules labels
+  ceDesc: "40 séries · 39 questions · 60 min",
+  coDesc: "40 séries · 39 questions · 35 min",
 };
 
 function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials,registerSuccess,onCloseSuccess}) {
@@ -365,8 +380,8 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
   const barPct   = sel ? Math.round((sel.qMax/39)*100) : 0;
 
   const modules = [
-    {icon:"📖",color:"#1a3a8f",bg:"rgba(26,58,143,0.1)",border:"rgba(26,58,143,0.25)",t:"Compréhension Écrite",d:"40 séries · 39 questions · 60 min",chips:["Image + Question","4 choix A/B/C/D","Barème officiel"],active:true},
-    {icon:"🎧",color:"#a0197e",bg:"rgba(160,25,126,0.1)",border:"rgba(160,25,126,0.25)",t:"Compréhension Orale",d:"40 séries · 39 questions · 35 min",chips:["Audio MP3","Image 3 premières Q","4 propositions"],active:true},
+    {icon:"📖",color:"#1a3a8f",bg:"rgba(26,58,143,0.1)",border:"rgba(26,58,143,0.25)",t:"Compréhension Écrite",d:cfg.ceDesc,chips:["Image + Question","4 choix A/B/C/D","Barème officiel"],active:true},
+    {icon:"🎧",color:"#a0197e",bg:"rgba(160,25,126,0.1)",border:"rgba(160,25,126,0.25)",t:"Compréhension Orale",d:cfg.coDesc,chips:["Audio MP3","Image 3 premières Q","4 propositions"],active:true},
     {icon:"✍️",color:GRAY,bg:BG,border:BORDER,t:"Expression Écrite",d:"Production de textes guidée",chips:["Bientôt disponible"],active:false},
     {icon:"🗣️",color:GRAY,bg:BG,border:BORDER,t:"Expression Orale",d:"Simulation d'entretien",chips:["Bientôt disponible"],active:false},
   ];
@@ -425,7 +440,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
               {cfg.heroSubtitle}
             </p>
             <div className="fu2" style={{display:"flex",gap:22,marginBottom:36}}>
-              {[["80","Séries"],["3 120","Questions"],["699","Points max"],["A1→C2","Niveaux"]].map(([n,l])=>(
+              {[[cfg.stat1Val,cfg.stat1Label],[cfg.stat2Val,cfg.stat2Label],[cfg.stat3Val,cfg.stat3Label],[cfg.stat4Val,cfg.stat4Label]].map(([n,l])=>(
                 <div key={n} style={{textAlign:"center"}}>
                   <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:"#fff",lineHeight:1}}>{n}</div>
                   <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:3,letterSpacing:.5,textTransform:"uppercase"}}>{l}</div>
@@ -437,7 +452,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
               <button className="btn btn-ghost" onClick={onLogin} style={{fontSize:13,padding:"13px 20px"}}>{cfg.ctaSecondary}</button>
             </div>
             <div style={{display:"flex",gap:16,marginTop:22,flexWrap:"wrap"}}>
-              {["✓ 3 séries gratuites","✓ Sans carte bancaire","✓ Correction détaillée"].map(t=>(
+              {[cfg.trust1,cfg.trust2,cfg.trust3].map(t=>(
                 <span key={t} style={{fontSize:11,color:"rgba(255,255,255,0.35)",display:"flex",alignItems:"center",gap:4}}>{t}</span>
               ))}
             </div>
@@ -657,7 +672,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
 
       <div style={{background:"#040a18",padding:"20px 40px",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,color:"rgba(255,255,255,0.2)"}}>
         <span>{cfg.footerCopyright}</span>
-        <span>TCF Canada · Immigration francophone</span>
+        <span>{cfg.footerRight}</span>
       </div>
     </div>
   );
@@ -1649,35 +1664,76 @@ function AdminSiteConfigEditor({siteConfig,onSave}) {
     <div style={{marginBottom:12}}>
       <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:4,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
       {multi
-        ?<textarea className="inp" value={cfg[k]} onChange={e=>upd(k,e.target.value)} rows={2}/>
-        :<input className="inp" value={cfg[k]} onChange={e=>upd(k,e.target.value)}/>}
+        ?<textarea className="inp" value={cfg[k]||""} onChange={e=>upd(k,e.target.value)} rows={2}/>
+        :<input className="inp" value={cfg[k]||""} onChange={e=>upd(k,e.target.value)}/>}
     </div>
   );
   return (
     <div className="card" style={{padding:22,marginBottom:14}}>
       <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:14}}>🌐 Configuration générale</h3>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        <F label="Nom du site" k="siteName"/>
-        <F label="Slogan principal" k="tagline"/>
-        <F label="Badge hero" k="heroBadge"/>
-        <F label="CTA principal" k="ctaPrimary"/>
-        <F label="CTA secondaire" k="ctaSecondary"/>
-        <F label="Copyright footer" k="footerCopyright"/>
+
+      <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🏠 Identité du site</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <F label="Nom du site" k="siteName"/>
+          <F label="Slogan" k="tagline"/>
+          <F label="Badge hero" k="heroBadge"/>
+          <F label="Copyright footer" k="footerCopyright"/>
+          <F label="Texte footer droite" k="footerRight"/>
+        </div>
       </div>
-      <F label="Sous-titre héro" k="heroSubtitle" multi/>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        <F label="Titre avantages" k="avantagesTitle"/>
-        <F label="Sous-titre avantages" k="avantagesSubtitle"/>
-        <F label="Titre packs" k="packsTitle"/>
-        <F label="Sous-titre packs" k="packsSubtitle"/>
+
+      <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🦸 Section Héro</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <F label="Titre ligne 1" k="heroTitle1"/>
+          <F label="Titre ligne 2" k="heroTitle2"/>
+          <F label="CTA principal" k="ctaPrimary"/>
+          <F label="CTA secondaire" k="ctaSecondary"/>
+        </div>
+        <F label="Sous-titre héro" k="heroSubtitle" multi/>
+        <div style={{fontSize:11,fontWeight:700,color:DARK,marginBottom:8,marginTop:4,textTransform:"uppercase",letterSpacing:.4}}>Statistiques</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
+          <F label="Stat 1 valeur" k="stat1Val"/>
+          <F label="Stat 1 label" k="stat1Label"/>
+          <F label="Stat 2 valeur" k="stat2Val"/>
+          <F label="Stat 2 label" k="stat2Label"/>
+          <F label="Stat 3 valeur" k="stat3Val"/>
+          <F label="Stat 3 label" k="stat3Label"/>
+          <F label="Stat 4 valeur" k="stat4Val"/>
+          <F label="Stat 4 label" k="stat4Label"/>
+        </div>
+        <div style={{fontSize:11,fontWeight:700,color:DARK,marginBottom:8,marginTop:8,textTransform:"uppercase",letterSpacing:.4}}>Badges de confiance</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+          <F label="Badge 1" k="trust1"/>
+          <F label="Badge 2" k="trust2"/>
+          <F label="Badge 3" k="trust3"/>
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-        <F label="Titre témoignages" k="testimonialsTitle"/>
-        <F label="Sous-titre témoignages" k="testimonialsSubtitle"/>
-        <F label="Titre CTA final" k="ctaFinalTitle"/>
-        <F label="Texte CTA final" k="ctaFinalDesc"/>
+
+      <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>📦 Sections page d'accueil</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <F label="Description CE" k="ceDesc"/>
+          <F label="Description CO" k="coDesc"/>
+          <F label="Titre avantages" k="avantagesTitle"/>
+          <F label="Sous-titre avantages" k="avantagesSubtitle"/>
+          <F label="Titre packs" k="packsTitle"/>
+          <F label="Sous-titre packs" k="packsSubtitle"/>
+          <F label="Titre témoignages" k="testimonialsTitle"/>
+          <F label="Sous-titre témoignages" k="testimonialsSubtitle"/>
+        </div>
       </div>
-      <button className="btn btn-p btn-sm" onClick={()=>onSave(cfg)}>💾 Enregistrer la configuration</button>
+
+      <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🎯 CTA final</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <F label="Titre CTA final" k="ctaFinalTitle"/>
+          <F label="Texte CTA final" k="ctaFinalDesc"/>
+        </div>
+      </div>
+
+      <button className="btn btn-p btn-sm" onClick={()=>onSave(cfg)}>💾 Enregistrer toute la configuration</button>
     </div>
   );
 }
