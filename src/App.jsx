@@ -1805,9 +1805,24 @@ function AdminPacksEditor({packs,onSave}) {
 ═══════════════════════════════════════════════════════════════ */
 function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,packs,setPacks,avantages,setAvantages,testimonials,setTestimonials,onLogout}) {
   const [tab,  setTab]   = useState("dashboard");
-  const [modal,setModal] = useState(null); // {type:"create"|"edit"|"delete", serie?, serieType?}
+  const [modal,setModal] = useState(null);
   const [search,setSearch]=useState("");
   const [toast,showToast]=useToast();
+
+  const API = "https://pc-backend-rr9v.onrender.com";
+  const authH = () => ({"Content-Type":"application/json","Authorization":`Bearer ${localStorage.getItem("pc_token")}`});
+
+  // Charger users et séries depuis la DB dès que l'admin s'ouvre
+  useEffect(()=>{
+    fetch(`${API}/api/users`,{headers:authH()})
+      .then(r=>r.json())
+      .then(d=>{ if(Array.isArray(d)) setUsers(d); })
+      .catch(()=>{});
+    fetch(`${API}/api/series`,{headers:authH()})
+      .then(r=>r.json())
+      .then(d=>{ if(Array.isArray(d)&&d.length>0) setSeries(d); })
+      .catch(()=>{});
+  },[]);
 
   const ceSeries = series.filter(s=>s.type==="CE");
   const coSeries = series.filter(s=>s.type==="CO");
