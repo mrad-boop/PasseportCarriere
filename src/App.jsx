@@ -328,7 +328,7 @@ const INIT_SITE_CONFIG = {
   footerCopyright: "© 2026 Passeport Carrière",
 };
 
-function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials}) {
+function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials,registerSuccess,onCloseSuccess}) {
   const [activeLevel,setActiveLevel] = useState("B2");
   const cfg = siteConfig || INIT_SITE_CONFIG;
   const packData = packs || INIT_PACKS;
@@ -380,6 +380,17 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
   return (
     <div style={{minHeight:"100vh",fontFamily:"'DM Sans',sans-serif",background:"#060d1f"}}>
       <style>{LANDING_CSS}</style>
+
+      {/* ── BANNIÈRE SUCCÈS INSCRIPTION ── */}
+      {registerSuccess&&(
+        <div style={{position:"fixed",top:58,left:0,right:0,zIndex:150,background:"#059669",padding:"14px 32px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <span style={{color:"#fff",fontSize:14,fontWeight:600}}>✅ Inscription réussie ! Veuillez vous connecter pour accéder à votre espace.</span>
+          <div style={{display:"flex",gap:12,alignItems:"center"}}>
+            <button onClick={onLogin} style={{background:"#fff",color:"#059669",border:"none",borderRadius:8,padding:"7px 18px",fontSize:13,fontWeight:700,cursor:"pointer"}}>Se connecter →</button>
+            <button onClick={onCloseSuccess} style={{background:"transparent",border:"none",color:"rgba(255,255,255,0.7)",fontSize:18,cursor:"pointer"}}>✕</button>
+          </div>
+        </div>
+      )}
 
       {/* ── NAV ── */}
       <nav className="nav-blur" style={{position:"fixed",top:0,left:0,right:0,zIndex:200,height:58,background:"rgba(6,13,31,0.85)",borderBottom:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 40px"}}>
@@ -659,7 +670,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
 /* ═══════════════════════════════════════════════════════════════
    AUTH PAGES
 ═══════════════════════════════════════════════════════════════ */
-function LoginPage({onSuccess,onAdminLogin,onRegister,users}) {
+function LoginPage({onSuccess,onAdminLogin,onRegister,users,successMsg}) {
   const [email,setEmail]=useState(""); const [pwd,setPwd]=useState("");
   const [err,setErr]=useState(""); const [loading,setLoading]=useState(false);
   const submit = async () => {
@@ -2114,12 +2125,14 @@ export default function App() {
       .catch(()=>{});
   },[]);
 
+  const [registerSuccess, setRegisterSuccess] = useState(false);
+
   return (
     <>
       <style>{CSS}</style>
-      {screen==="landing"  && <LandingPage  onLogin={()=>setScreen("login")} onRegister={()=>setScreen("register")} siteConfig={siteConfig} packs={packs} avantages={avantages} testimonials={testimonials}/>}
+      {screen==="landing"  && <LandingPage  onLogin={()=>setScreen("login")} onRegister={()=>setScreen("register")} siteConfig={siteConfig} packs={packs} avantages={avantages} testimonials={testimonials} registerSuccess={registerSuccess} onCloseSuccess={()=>setRegisterSuccess(false)}/>}
       {screen==="login"    && <LoginPage    users={users} onSuccess={u=>{setCurUser(u);setScreen("user");}} onAdminLogin={()=>setScreen("admin")} onRegister={()=>setScreen("register")}/>}
-      {screen==="register" && <RegisterPage users={users} setUsers={setUsers} onSuccess={u=>{setCurUser(u);setScreen("user");}} onLogin={()=>setScreen("login")}/>}
+      {screen==="register" && <RegisterPage users={users} setUsers={setUsers} onSuccess={()=>{setRegisterSuccess(true);setScreen("landing");}} onLogin={()=>setScreen("login")}/>}
       {screen==="user"     && curUser && <UserDashboard user={curUser} series={series} setSeries={setSeries} setUsers={setUsers} onLogout={()=>{setCurUser(null);setScreen("landing");}}/>}
       {screen==="admin"    && <AdminPanel   users={users} setUsers={setUsers} series={series} setSeries={setSeries} siteConfig={siteConfig} setSiteConfig={setSiteConfig} packs={packs} setPacks={setPacks} avantages={avantages} setAvantages={setAvantages} testimonials={testimonials} setTestimonials={setTestimonials} onLogout={()=>setScreen("landing")}/>}
     </>
