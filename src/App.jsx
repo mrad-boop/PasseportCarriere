@@ -666,12 +666,22 @@ function LoginPage({onSuccess,onAdminLogin,onRegister,users}) {
     setErr("");
     if(!email||!pwd) return setErr("Email et mot de passe requis.");
     setLoading(true);
-    await new Promise(r=>setTimeout(r,600));
+    // Admin local
     if(email===ADMIN_CREDS.email&&pwd===ADMIN_CREDS.password){setLoading(false);return onAdminLogin();}
-    const u=users.find(u=>u.email===email&&u.password===pwd);
-    if(!u){setLoading(false);return setErr("Identifiants incorrects.");}
-    if(u.status==="suspendu"){setLoading(false);return setErr("Compte suspendu. Contactez le support.");}
-    setLoading(false); onSuccess(u);
+    try {
+      const res = await fetch("https://pc-backend-rr9v.onrender.com/api/auth/login", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({email, password:pwd})
+      });
+      const data = await res.json();
+      if(!res.ok) { setLoading(false); return setErr(data.error||"Identifiants incorrects."); }
+      localStorage.setItem("pc_token", data.token);
+      setLoading(false);
+      onSuccess(data.user);
+    } catch(e) {
+      setLoading(false);
+      setErr("Impossible de contacter le serveur.");
+    }
   };
   return (
     <div style={{minHeight:"100vh",background:DARK,display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
@@ -712,12 +722,30 @@ function RegisterPage({onSuccess,onLogin,users,setUsers}) {
     if(!nom||!email||!pwd) return setErr("Champs obligatoires manquants.");
     if(pwd.length<8) return setErr("Mot de passe : 8 caractères minimum.");
     if(pwd!==pwd2) return setErr("Les mots de passe ne correspondent pas.");
-    if(users.find(u=>u.email===email)) return setErr("Email déjà utilisé.");
     setLoading(true);
-    await new Promise(r=>setTimeout(r,800));
-    const u={id:Date.now(),nom,email,password:pwd,pays,plan:"free",status:"actif",joined:new Date().toISOString().slice(0,10),lastLogin:new Date().toISOString().slice(0,10)};
-    const next=[...users,u]; setUsers(next); LS.set("lp_users",next);
-    setLoading(false); onSuccess(u);
+    try {
+      const res = await fetch("https://pc-backend-rr9v.onrender.com/api/auth/register", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({nom, email, password:pwd, pays})
+      });
+      let data;
+      try { data = await res.json(); } catch { data = {}; }
+      if(!res.ok) {
+        setLoading(false);
+        return setErr(data.error||`Erreur ${res.status} — vérifiez les logs Render.`);
+      }
+      if(!data.token || !data.user) {
+        setLoading(false);
+        return setErr("Réponse inattendue du serveur.");
+      }
+      localStorage.setItem("pc_token", data.token);
+      setLoading(false);
+      onSuccess(data.user);
+    } catch(e) {
+      setLoading(false);
+      setErr("Impossible de contacter le serveur : " + e.message);
+    }
   };
   return (
     <div style={{minHeight:"100vh",background:DARK,display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
@@ -2062,12 +2090,29 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
 export default function App() {
   const [screen,      setScreen]      = useState("landing");
   const [curUser,     setCurUser]     = useState(null);
-  const [users,       setUsers]       = useState(()=>LS.get("lp_users",INIT_USERS));
-  const [series,      setSeries]      = useState(()=>LS.get("lp_series",[...SAMPLE_CE,...SAMPLE_CO]));
+  const [users,       setUsers]       = useState([]);
+  const [series,      setSeries]      = useState([...SAMPLE_CE,...SAMPLE_CO]);
   const [siteConfig,  setSiteConfig]  = useState(()=>LS.get("lp_site_config",INIT_SITE_CONFIG));
   const [packs,       setPacks]       = useState(()=>LS.get("lp_packs",INIT_PACKS));
   const [avantages,   setAvantages]   = useState(()=>LS.get("lp_avantages",INIT_AVANTAGES));
   const [testimonials,setTestimonials]= useState(()=>LS.get("lp_testimonials",INIT_TESTIMONIALS));
+
+  const API = "https://pc-backend-rr9v.onrender.com";
+  const token = () => localStorage.getItem("pc_token");
+  const authH = () => ({"Content-Type":"application/json", ...(token()?{Authorization:`Bearer ${token()}`}:{})});
+
+  // Charger les séries depuis le backend au démarrage
+  useEffect(()=>{
+    fetch(`${API}/api/series`,{headers:authH()})
+      .then(r=>r.json())
+      .then(data=>{ if(Array.isArray(data)&&data.length>0) setSeries(data); })
+      .catch(()=>{});
+    // Charger les users si admin
+    fetch(`${API}/api/users`,{headers:authH()})
+      .then(r=>r.json())
+      .then(data=>{ if(Array.isArray(data)) setUsers(data); })
+      .catch(()=>{});
+  },[]);
 
   return (
     <>
