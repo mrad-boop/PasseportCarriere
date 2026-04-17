@@ -169,8 +169,18 @@ const LS = {
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   INITIAL DATA
+   API — Backend
 ═══════════════════════════════════════════════════════════════ */
+const API = "https://pc-backend-rr9v.onrender.com";
+const authH = () => ({
+  "Content-Type":"application/json",
+  ...(localStorage.getItem("pc_token")?{Authorization:`Bearer ${localStorage.getItem("pc_token")}`}:{})
+});
+const apiGet  = (path) => fetch(`${API}${path}`,{headers:authH()}).then(r=>r.json()).catch(()=>null);
+const apiPost = (path,body) => fetch(`${API}${path}`,{method:"POST",headers:authH(),body:JSON.stringify(body)}).then(r=>r.json()).catch(()=>null);
+const apiPut  = (path,body) => fetch(`${API}${path}`,{method:"PUT",headers:authH(),body:JSON.stringify(body)}).then(r=>r.json()).catch(()=>null);
+const apiDel  = (path) => fetch(`${API}${path}`,{method:"DELETE",headers:authH()}).then(r=>r.json()).catch(()=>null);
+
 const ADMIN_CREDS = { email:"admin@launchpad.ca", password:"Admin2026!" };
 
 const INIT_USERS = [];
@@ -1460,7 +1470,7 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   const [tab,setTab]         = useState("home");
   const [activeSerie,setActiveSerie] = useState(null);
   const [examType,setExamType]       = useState(null);
-  const [attempts,setAttempts]       = useState(()=>LS.get(`lp_att_${user.id}`,{}));
+  const [attempts,setAttempts]       = useState({});
   const isPremium = user.plan==="premium";
   const initials  = user.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase();
   const pays      = getPays(user.pays);
@@ -1468,10 +1478,28 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   const ceSeries = series.filter(s=>s.type==="CE");
   const coSeries = series.filter(s=>s.type==="CO");
 
+  // Charger les tentatives depuis le backend
+  useEffect(()=>{
+    apiGet("/api/attempts").then(data=>{
+      if(Array.isArray(data)){
+        const map={};
+        data.forEach(a=>{ map[a.serie_id]={correct:a.correct,score:a.score,level:a.level,date:a.done_at}; });
+        setAttempts(map);
+      }
+    });
+  },[]);
+
   const saveAttempt = useCallback((serieId, result, answers) => {
     const next = {...attempts, [serieId]:{...result, answers, date:new Date().toISOString()}};
     setAttempts(next);
-    LS.set(`lp_att_${user.id}`, next);
+    // Sauvegarder en DB
+    apiPost("/api/attempts",{
+      serie_id: serieId,
+      correct:  result.correct,
+      score:    result.score,
+      level:    result.level,
+      answers:  answers,
+    });
   },[attempts,user.id]);
 
   const startSerie = (serie, type) => {
@@ -1638,7 +1666,9 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
         {/* Profil — Editable */}
         {tab==="profil"&&(
           <ProfilTab user={user} isPremium={isPremium} attempts={attempts} onUpdate={updatedUser=>{
-            setUsers(prev=>{const n=prev.map(u=>u.id===updatedUser.id?updatedUser:u);LS.set("lp_users",n);return n;});
+            apiPut("/api/users/me", updatedUser).then(()=>{
+              setUsers(prev=>prev.map(u=>u.id===updatedUser.id?updatedUser:u));
+            });
           }}/>
         )}
       </main>
@@ -2107,53 +2137,49 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
   const [search,setSearch]=useState("");
   const [toast,showToast]=useToast();
 
-  const API = "https://pc-backend-rr9v.onrender.com";
-  const authH = () => ({"Content-Type":"application/json","Authorization":`Bearer ${localStorage.getItem("pc_token")}`});
-
   // Charger users et séries depuis la DB dès que l'admin s'ouvre
   useEffect(()=>{
-    fetch(`${API}/api/users`,{headers:authH()})
-      .then(r=>r.json())
-      .then(d=>{ if(Array.isArray(d)) setUsers(d); })
-      .catch(()=>{});
-    fetch(`${API}/api/series`,{headers:authH()})
-      .then(r=>r.json())
-      .then(d=>{ if(Array.isArray(d)&&d.length>0) setSeries(d); })
-      .catch(()=>{});
+    apiGet("/api/users").then(d=>{ if(Array.isArray(d)) setUsers(d); });
+    apiGet("/api/series").then(d=>{ if(Array.isArray(d)&&d.length>0) setSeries(d); });
   },[]);
 
   const ceSeries = series.filter(s=>s.type==="CE");
   const coSeries = series.filter(s=>s.type==="CO");
 
-  const saveSerie = (obj) => {
-    setSeries(prev => {
-      const exists = prev.find(s=>s.id===obj.id);
-      const next = exists ? prev.map(s=>s.id===obj.id?obj:s) : [...prev,obj];
-      LS.set("lp_series",next);
-      return next;
-    });
-    setModal(null);
-    showToast(modal?.type==="edit"?"Série mise à jour !":"Série créée !");
+  const saveSerie = async (obj) => {
+    const res = await apiPost("/api/series", obj);
+    if(res && !res.error){
+      setSeries(prev=>{
+        const exists=prev.find(s=>s.id===obj.id);
+        return exists ? prev.map(s=>s.id===obj.id?obj:s) : [...prev,obj];
+      });
+      setModal(null);
+      showToast(modal?.type==="edit"?"Série mise à jour !":"Série créée !");
+    } else {
+      showToast("Erreur lors de la sauvegarde.","error");
+    }
   };
 
-  const deleteSerie = (id) => {
-    setSeries(prev=>{ const n=prev.filter(s=>s.id!==id); LS.set("lp_series",n); return n; });
-    setModal(null);
-    showToast("Série supprimée.","info");
+  const deleteSerie = async (id) => {
+    const res = await apiDel(`/api/series/${id}`);
+    if(res && !res.error){
+      setSeries(prev=>prev.filter(s=>s.id!==id));
+      setModal(null);
+      showToast("Série supprimée.","info");
+    } else {
+      showToast("Erreur lors de la suppression.","error");
+    }
   };
 
   const updateUser=(id,changes)=>{
-    fetch(`${API}/api/users/${id}`,{method:"PUT",headers:authH(),body:JSON.stringify(changes)})
-      .then(r=>r.json())
+    apiPut(`/api/users/${id}`,changes)
       .then(()=>{
         setUsers(prev=>prev.map(u=>u.id===id?{...u,...changes}:u));
         showToast("Utilisateur mis à jour.");
-      })
-      .catch(()=>showToast("Erreur lors de la mise à jour.","error"));
+      });
   };
   const deleteUser=id=>{
-    fetch(`${API}/api/users/${id}`,{method:"DELETE",headers:authH()})
-      .then(r=>r.json())
+    apiDel(`/api/users/${id}`)
       .then(()=>{
         setUsers(prev=>prev.filter(u=>u.id!==id));
         showToast("Utilisateur supprimé.","info");
@@ -2369,21 +2395,31 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
               <p style={{fontSize:12,color:GRAY,lineHeight:1.65,marginBottom:14}}>
                 Format attendu : <code style={{background:BG,padding:"1px 6px",borderRadius:4,fontSize:11}}>{"[{type,title,premium,questions:[...]}]"}</code>
               </p>
-              <JsonImportZone onImport={(imported)=>{
+              <JsonImportZone onImport={async (imported)=>{
                 let added=0;
-                setSeries(prev=>{
-                  let next=[...prev];
-                  imported.forEach(s=>{
-                    if(s.type&&s.title&&Array.isArray(s.questions)){
-                      const obj={...s,id:s.id||`${s.type.toLowerCase()}-${Date.now()}-${added}`};
-                      const exists=next.find(x=>x.id===obj.id);
-                      if(exists){next=next.map(x=>x.id===obj.id?obj:x);}else{next.push(obj);}
-                      added++;
-                    }
-                  });
-                  LS.set("lp_series",next);return next;
+                const toAdd=[];
+                imported.forEach(s=>{
+                  if(s.type&&s.title&&Array.isArray(s.questions)){
+                    const obj={...s,id:s.id||`${s.type.toLowerCase()}-${Date.now()}-${added}`};
+                    toAdd.push(obj);
+                    added++;
+                  }
                 });
-                showToast(`${added} série(s) importée(s) !`);
+                if(toAdd.length===0){showToast("Aucune série valide trouvée.","error");return;}
+
+                // Envoyer chaque série au backend
+                let saved=0;
+                showToast(`Envoi de ${toAdd.length} série(s) au serveur…`,"info");
+                for(const obj of toAdd){
+                  const res = await apiPost("/api/series", obj);
+                  if(res && !res.error) saved++;
+                }
+
+                // Recharger les séries depuis la DB
+                apiGet("/api/series").then(d=>{if(Array.isArray(d)&&d.length>0)setSeries(d);});
+
+                if(saved>0) showToast(`✅ ${saved} série(s) sauvegardée(s) en base de données !`);
+                else showToast("Erreur lors de la sauvegarde.","error");
               }}/>
               <div style={{marginTop:12}}>
                 <button className="btn btn-o btn-sm" onClick={()=>{
@@ -2393,8 +2429,10 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
             </div>
 
             {/* ── CONFIGURATION GÉNÉRALE ── */}
-            <AdminSiteConfigEditor siteConfig={siteConfig} onSave={cfg=>{setSiteConfig(cfg);LS.set("lp_site_config",cfg);showToast("Configuration sauvegardée !");}}/>
-
+            <AdminSiteConfigEditor siteConfig={siteConfig} onSave={cfg=>{
+              setSiteConfig(cfg);
+              apiPut("/api/packs/config", cfg).then(()=>showToast("Configuration sauvegardée !"));
+            }}/>
             {/* ── 2 SERVICES COMING SOON ── */}
           <div style={{marginBottom:32}}>
             <div style={{textAlign:"center",marginBottom:22}}>
@@ -2421,11 +2459,23 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
           </div>
 
           {/* ── NOS AVANTAGES ── */}
-            <AdminAvantagesEditor avantages={avantages} onSave={av=>{setAvantages(av);LS.set("lp_avantages",av);showToast("Avantages mis à jour !");}}/>
-            <AdminTestimonialsEditor testimonials={testimonials} onSave={t=>{setTestimonials(t);LS.set("lp_testimonials",t);showToast("Témoignages mis à jour !");}}/>
+            <AdminAvantagesEditor avantages={avantages} onSave={av=>{
+              setAvantages(av);
+              apiPut("/api/packs/config",{avantages:JSON.stringify(av)}).then(()=>showToast("Avantages mis à jour !"));
+            }}/>
+            <AdminTestimonialsEditor testimonials={testimonials} onSave={t=>{
+              setTestimonials(t);
+              apiPut("/api/packs/config",{testimonials:JSON.stringify(t)}).then(()=>showToast("Témoignages mis à jour !"));
+            }}/>
 
             {/* ── PACKS ── */}
-            <AdminPacksEditor packs={packs} onSave={pk=>{setPacks(pk);LS.set("lp_packs",pk);showToast("Packs mis à jour !");}}/>
+            <AdminPacksEditor packs={packs} onSave={async pk=>{
+              setPacks(pk);
+              for(const p of pk){
+                await apiPut(`/api/packs/${p.id}`,p);
+              }
+              showToast("Packs mis à jour !");
+            }}/>
           </div>
         )}
       </main>
@@ -2459,16 +2509,13 @@ export default function App() {
   const [curUser,     setCurUser]     = useState(null);
   const [users,       setUsers]       = useState([]);
   const [series,      setSeries]      = useState([...SAMPLE_CE,...SAMPLE_CO]);
-  const [siteConfig,  setSiteConfig]  = useState(()=>LS.get("lp_site_config",INIT_SITE_CONFIG));
-  const [packs,       setPacks]       = useState(()=>LS.get("lp_packs",INIT_PACKS));
-  const [avantages,   setAvantages]   = useState(()=>LS.get("lp_avantages",INIT_AVANTAGES));
-  const [testimonials,setTestimonials]= useState(()=>LS.get("lp_testimonials",INIT_TESTIMONIALS));
+  const [siteConfig,  setSiteConfig]  = useState(INIT_SITE_CONFIG);
+  const [packs,       setPacks]       = useState(INIT_PACKS);
+  const [avantages,   setAvantages]   = useState(INIT_AVANTAGES);
+  const [testimonials,setTestimonials]= useState(INIT_TESTIMONIALS);
   const [registerSuccess, setRegisterSuccess] = useState(false);
 
-  const API = "https://pc-backend-rr9v.onrender.com";
   const token = () => localStorage.getItem("pc_token");
-  const authH = () => ({"Content-Type":"application/json", ...(token()?{Authorization:`Bearer ${token()}`}:{})});
-
   const INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
   const inactivityTimer = useRef(null);
 
@@ -2489,36 +2536,40 @@ export default function App() {
 
   // Restaurer la session au refresh
   useEffect(() => {
+    // Toujours charger les données publiques depuis le backend
+    apiGet("/api/series").then(d=>{ if(Array.isArray(d)&&d.length>0) setSeries(d); });
+    apiGet("/api/packs").then(d=>{ if(Array.isArray(d)&&d.length>0) setPacks(d); });
+    apiGet("/api/packs/config").then(d=>{
+      if(d && typeof d==="object"){
+        // siteConfig
+        const cfg={...INIT_SITE_CONFIG};
+        Object.keys(INIT_SITE_CONFIG).forEach(k=>{ if(d[k]) cfg[k]=d[k]; });
+        setSiteConfig(cfg);
+        // avantages
+        if(d.avantages){ try{ setAvantages(JSON.parse(d.avantages)); }catch{} }
+        // testimonials
+        if(d.testimonials){ try{ setTestimonials(JSON.parse(d.testimonials)); }catch{} }
+      }
+    });
+
+    // Restaurer la session
     const session = LS.get("pc_session", null);
     const t = token();
     if(session && t) {
-      // Vérifier si la session n'a pas expiré
       const lastActivity = session.lastActivity || 0;
       const now = Date.now();
       if(now - lastActivity < INACTIVITY_MS) {
-        // Session valide → restaurer
         if(session.isAdmin) {
           setScreen("admin");
+          apiGet("/api/users").then(d=>{ if(Array.isArray(d)) setUsers(d); });
         } else if(session.user) {
           setCurUser(session.user);
           setScreen("user");
         }
-        // Recharger les données
-        fetch(`${API}/api/series`,{headers:authH()})
-          .then(r=>r.json()).then(d=>{if(Array.isArray(d)&&d.length>0)setSeries(d);}).catch(()=>{});
-        if(session.isAdmin) {
-          fetch(`${API}/api/users`,{headers:authH()})
-            .then(r=>r.json()).then(d=>{if(Array.isArray(d))setUsers(d);}).catch(()=>{});
-        }
         resetInactivityTimer();
       } else {
-        // Session expirée → nettoyer
         logout();
       }
-    } else {
-      // Pas de session → charger les séries publiques
-      fetch(`${API}/api/series`,{headers:authH()})
-        .then(r=>r.json()).then(d=>{if(Array.isArray(d)&&d.length>0)setSeries(d);}).catch(()=>{});
     }
   }, []);
 
