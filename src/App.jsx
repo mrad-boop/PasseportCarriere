@@ -1502,9 +1502,27 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
     });
   },[attempts,user.id]);
 
-  const startSerie = (serie, type) => {
-    setActiveSerie(serie);
-    setExamType(type);
+  const startSerie = async (serie, type) => {
+    // Si les questions sont déjà chargées, on utilise directement
+    if(serie.questions && serie.questions.length > 0){
+      setActiveSerie(serie);
+      setExamType(type);
+      return;
+    }
+    // Sinon on charge depuis le backend
+    try {
+      const full = await apiGet(`/api/series/${serie.id}`);
+      if(full && full.questions && full.questions.length > 0){
+        setActiveSerie(full);
+        setExamType(type);
+        // Mettre à jour le state local aussi
+        setSeries(prev=>prev.map(s=>s.id===serie.id?full:s));
+      } else {
+        alert("Impossible de charger les questions de cette série.");
+      }
+    } catch(e) {
+      alert("Erreur réseau lors du chargement de la série.");
+    }
   };
 
   const finishExam = (serieId, result, answers) => {
