@@ -47,7 +47,91 @@ select.inp{cursor:pointer}
 .option-btn.wrong{border-color:#dc2626;background:rgba(220,38,38,0.07);color:#b91c1c}
 .option-btn.selected{border-color:${BLUE};background:rgba(26,58,143,0.06)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:${BORDER};border-radius:10px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  /* Sidebar mobile — bottom nav bar */
+  .sidebar-desktop{display:none!important}
+  .bottom-nav{display:flex!important}
+  .main-content{padding-bottom:70px!important}
+
+  /* Dashboard grid — 1 col */
+  .dash-grid{grid-template-columns:1fr!important}
+  .dash-grid-4{grid-template-columns:1fr 1fr!important}
+
+  /* Landing hero — stack */
+  .hero-grid{grid-template-columns:1fr!important;gap:28px!important;padding:32px 16px 48px!important}
+  .hero-sim{display:none!important}
+  .hero-h1{font-size:32px!important}
+  .hero-stats{gap:14px!important}
+
+  /* Landing sections */
+  .landing-section{padding:40px 16px!important}
+  .modules-grid{grid-template-columns:1fr!important}
+  .avantages-grid{grid-template-columns:1fr 1fr!important}
+  .packs-grid{grid-template-columns:1fr!important}
+  .testimonials-grid{grid-template-columns:1fr!important}
+  .coming-grid{grid-template-columns:1fr!important}
+  .cta-final{padding:28px 20px!important}
+  .cta-final h2{font-size:22px!important}
+
+  /* Nav landing */
+  .nav-links{display:none!important}
+  .nav-landing{padding:0 16px!important}
+
+  /* Exam engine mobile */
+  .exam-layout{flex-direction:column!important;height:auto!important}
+  .exam-sidebar{width:100%!important;flex-direction:row!important;flex-wrap:wrap!important;border-left:none!important;border-top:1px solid rgba(255,255,255,0.08)!important;position:sticky!important;top:58px!important;z-index:10!important}
+  .exam-timer-block{padding:10px 14px!important;border-bottom:none!important;border-right:1px solid rgba(255,255,255,0.08)!important;min-width:120px!important}
+  .exam-timer-big{font-size:26px!important}
+  .exam-progress-block{padding:10px 14px!important;border-bottom:none!important;border-right:1px solid rgba(255,255,255,0.08)!important;flex:1!important}
+  .exam-nav-block{display:none!important}
+  .exam-actions{flex-direction:row!important;padding:10px 14px!important;border-top:none!important;gap:8px!important;flex:1!important}
+  .exam-header-sidebar{display:none!important}
+  .exam-content{padding:16px!important}
+  .exam-img{max-height:220px!important}
+
+  /* Auth pages */
+  .auth-card{width:100%!important;margin:0!important;border-radius:0!important;min-height:100vh!important;padding:28px 20px!important}
+
+  /* Admin */
+  .admin-layout{flex-direction:column!important}
+  .admin-sidebar{width:100%!important;height:auto!important;position:relative!important;flex-direction:row!important;overflow-x:auto!important}
+  .admin-nav{flex-direction:row!important;padding:6px!important;gap:4px!important}
+  .admin-sidebar-bottom{display:none!important}
+  .admin-content{padding:16px!important}
+  .admin-kpi-grid{grid-template-columns:1fr 1fr!important}
+
+  /* Packs admin */
+  .packs-admin-grid{grid-template-columns:1fr!important}
+}
+
+@media(max-width:480px){
+  .avantages-grid{grid-template-columns:1fr!important}
+  .dash-grid-4{grid-template-columns:1fr 1fr!important}
+  .hero-h1{font-size:26px!important}
+  .hero-stats{display:none!important}
+}
+
+/* Bottom nav — hidden by default, shown on mobile */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:${DARK};border-top:1px solid rgba(255,255,255,0.08);
+  z-index:200;height:62px;
+  align-items:stretch;
+}
+.bottom-nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;background:transparent;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;
+  color:rgba(255,255,255,0.4);letter-spacing:.3px;text-transform:uppercase;
+  border-top:2px solid transparent;transition:all .15s;
+}
+.bottom-nav-btn.active{color:#fff;border-top-color:#2d5be3;background:rgba(45,91,227,0.1)}
+.bottom-nav-btn span:first-child{font-size:18px}
 `;
+
 
 /* ═══════════════════════════════════════════════════════════════
    SCORE / LEVEL SYSTEM
@@ -427,19 +511,19 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
         <div style={{position:"absolute",bottom:"5%",right:"-8%",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,rgba(192,24,110,0.12) 0%,transparent 60%)",pointerEvents:"none"}}/>
         <div style={{position:"absolute",inset:0,backgroundImage:"linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)",backgroundSize:"60px 60px",pointerEvents:"none"}}/>
 
-        <div style={{maxWidth:1100,margin:"0 auto",padding:"60px 40px 80px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:60,alignItems:"center",position:"relative"}}>
+        <div className="hero-grid" style={{maxWidth:1100,margin:"0 auto",padding:"60px 40px 80px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:60,alignItems:"center",position:"relative"}}>
           {/* LEFT */}
           <div>
             <div className="fu" style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(45,91,227,0.12)",border:"1px solid rgba(45,91,227,0.25)",borderRadius:100,padding:"5px 14px",fontSize:11,fontWeight:600,color:"rgba(255,255,255,0.7)",marginBottom:22,letterSpacing:.5}}>
               {cfg.heroBadge}
             </div>
-            <h1 className="fu1" style={{fontFamily:"'Playfair Display',serif",fontSize:50,fontWeight:900,color:"#fff",lineHeight:1.08,marginBottom:14}}>
+            <h1 className="fu1 hero-h1" style={{fontFamily:"'Playfair Display',serif",fontSize:50,fontWeight:900,color:"#fff",lineHeight:1.08,marginBottom:14}}>
               {cfg.heroTitle1}<br/>{cfg.heroTitle2}<br/><Grad sz={50}>{cfg.tagline}</Grad>
             </h1>
             <p className="fu2" style={{fontSize:15,color:"rgba(255,255,255,0.48)",lineHeight:1.85,marginBottom:32,fontWeight:300,maxWidth:460}}>
               {cfg.heroSubtitle}
             </p>
-            <div className="fu2" style={{display:"flex",gap:22,marginBottom:36}}>
+            <div className="fu2 hero-stats" style={{display:"flex",gap:22,marginBottom:36}}>
               {[[cfg.stat1Val,cfg.stat1Label],[cfg.stat2Val,cfg.stat2Label],[cfg.stat3Val,cfg.stat3Label],[cfg.stat4Val,cfg.stat4Label]].map(([n,l])=>(
                 <div key={n} style={{textAlign:"center"}}>
                   <div style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:"#fff",lineHeight:1}}>{n}</div>
@@ -459,7 +543,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
           </div>
 
           {/* RIGHT — Score simulator CORRIGÉ */}
-          <div className="fu1 float" style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,padding:28,backdropFilter:"blur(12px)"}}>
+          <div className="fu1 float hero-sim" style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,padding:28,backdropFilter:"blur(12px)"}}>
             <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.5)",textTransform:"uppercase",letterSpacing:1,marginBottom:14}}>Barème officiel TCF Canada</div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:20}}>
               {BAREME.map(b=>(
@@ -525,7 +609,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:36,fontWeight:900,color:DARK,marginBottom:10}}>Une préparation complète<br/>et structurée</h2>
             <p style={{fontSize:14,color:GRAY,maxWidth:480,margin:"0 auto"}}>Chaque module reproduit fidèlement les conditions de l'examen officiel TCF Canada.</p>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:18,marginBottom:52}}>
+          <div className="modules-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:18,marginBottom:52}}>
             {modules.map((m,i)=>(
               <div key={i} className="card fu" style={{animationDelay:`${i*.08}s`,padding:26,position:"relative",overflow:"hidden",opacity:m.active?1:.55,border:`1.5px solid ${m.active?m.border:BORDER}`}}>
                 {m.active&&<div style={{position:"absolute",top:0,left:0,right:0,height:3,background:G}}/>}
@@ -549,7 +633,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
               <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:32,fontWeight:900,color:"#fff",marginBottom:10}}>{cfg.avantagesTitle}</h2>
               <p style={{fontSize:14,color:"rgba(255,255,255,0.4)"}}>{cfg.avantagesSubtitle}</p>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:32,position:"relative"}}>
+            <div className="avantages-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:32,position:"relative"}}>
               {avantagesData.map((av,i)=>(
                 <div key={i} style={{display:"flex",gap:16,alignItems:"flex-start"}}>
                   <div style={iconStyle}>{av.icon}</div>
@@ -574,7 +658,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
             <p style={{fontSize:14,color:GRAY}}>{cfg.packsSubtitle}</p>
           </div>
 
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:18}}>
+          <div className="packs-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:18}}>
             {packData.map((pack,i)=>(
               <div key={pack.id} className="pricing-card" style={{
                 background:pack.highlight?"linear-gradient(135deg,#1a3a8f,#2d5be3)":"#fff",
@@ -643,7 +727,7 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:30,fontWeight:900,color:"#fff",marginBottom:8}}>{cfg.testimonialsTitle}</h2>
             <p style={{fontSize:13,color:"rgba(255,255,255,0.35)"}}>{cfg.testimonialsSubtitle}</p>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+          <div className="testimonials-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
             {testimonialsData.map((t,i)=>(
               <div key={i} className="testimonial fu" style={{animationDelay:`${i*.1}s`}}>
                 <div style={{display:"flex",gap:9,alignItems:"center",marginBottom:14}}>
@@ -1014,10 +1098,10 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
   const isUrgent = timeLeft < 300;
 
   return (
-    <div style={{display:"flex",height:"calc(100vh - 58px)",fontFamily:"'DM Sans',sans-serif",overflow:"hidden"}}>
+    <div className="exam-layout" style={{display:"flex",height:"calc(100vh - 58px)",fontFamily:"'DM Sans',sans-serif",overflow:"hidden"}}>
 
       {/* ── GAUCHE : Zone question ── */}
-      <div style={{flex:1,overflowY:"auto",padding:"28px 32px",background:BG}}>
+      <div className="exam-content" style={{flex:1,overflowY:"auto",padding:"28px 32px",background:BG}}>
 
         {/* Audio CO */}
         {serie.type==="CO"&&serie.audioUrl&&(
@@ -1097,10 +1181,10 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
       </div>
 
       {/* ── DROITE : Timer + Navigation ── */}
-      <div style={{width:280,background:DARK,display:"flex",flexDirection:"column",borderLeft:"1px solid rgba(255,255,255,0.07)",flexShrink:0,overflowY:"auto"}}>
+      <div className="exam-sidebar" style={{width:280,background:DARK,display:"flex",flexDirection:"column",borderLeft:"1px solid rgba(255,255,255,0.07)",flexShrink:0,overflowY:"auto"}}>
 
         {/* Header sidebar */}
-        <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+        <div className="exam-header-sidebar" style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
             <div style={{width:22,height:22,borderRadius:6,background:G,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff"}}>PC</div>
             <span style={{fontSize:12,fontWeight:700,color:"#fff",fontFamily:"'Playfair Display',serif"}}>Passeport Carrière</span>
@@ -1109,9 +1193,9 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
         </div>
 
         {/* Timer */}
-        <div style={{padding:"20px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+        <div className="exam-timer-block" style={{padding:"20px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
           <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>⏱ Temps restant</div>
-          <div style={{
+          <div className="exam-timer-big" style={{
             fontFamily:"'Playfair Display',serif",
             fontSize:38,fontWeight:900,
             color:isUrgent?"#f87171":"#fff",
@@ -1130,7 +1214,7 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
         </div>
 
         {/* Progression */}
-        <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+        <div className="exam-progress-block" style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
           <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>📊 Progression</div>
           <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
             <span style={{fontSize:12,color:"rgba(255,255,255,0.5)"}}>Répondues</span>
@@ -1149,7 +1233,7 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
         </div>
 
         {/* Grille questions */}
-        <div style={{padding:"14px 18px",flex:1}}>
+        <div className="exam-nav-block" style={{padding:"14px 18px",flex:1}}>
           <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Navigation</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5}}>
             {questions.map((_,i)=>{
@@ -1402,12 +1486,12 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
     <div style={{minHeight:"100vh",display:"flex",fontFamily:"'DM Sans',sans-serif"}}>
       <style>{CSS}</style>
 
-      {/* SIDEBAR */}
-      <aside style={{width:220,background:DARK,display:"flex",flexDirection:"column",borderRight:"1px solid rgba(255,255,255,0.06)",flexShrink:0,position:"sticky",top:0,height:"100vh",overflowY:"auto"}}>
+      {/* SIDEBAR — desktop */}
+      <aside className="sidebar-desktop" style={{width:220,background:DARK,display:"flex",flexDirection:"column",borderRight:"1px solid rgba(255,255,255,0.06)",flexShrink:0,position:"sticky",top:0,height:"100vh",overflowY:"auto"}}>
         <div style={{padding:"16px 16px 12px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{width:26,height:26,borderRadius:7,background:G,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:900,fontSize:10,fontFamily:"'Playfair Display',serif"}}>LP</div>
-            <span style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#fff"}}>Launch<Grad>Pad</Grad></span>
+            <div style={{width:26,height:26,borderRadius:7,background:G,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:900,fontSize:10,fontFamily:"'Playfair Display',serif"}}>PC</div>
+            <span style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#fff"}}>Passeport <Grad>Carrière</Grad></span>
           </div>
         </div>
         <div style={{padding:"12px 14px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
@@ -1433,8 +1517,18 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
         </div>
       </aside>
 
+      {/* BOTTOM NAV — mobile */}
+      <nav className="bottom-nav">
+        {[{id:"home",i:"🏠",l:"Accueil"},{id:"ce",i:"📖",l:"CE"},{id:"co",i:"🎧",l:"CO"},{id:"profil",i:"👤",l:"Profil"},{id:"ee",i:"🚀",l:"Plus"}].map(n=>(
+          <button key={n.id} className={`bottom-nav-btn${tab===n.id?" active":""}`} onClick={()=>setTab(n.id)}>
+            <span>{n.i}</span>
+            <span>{n.l}</span>
+          </button>
+        ))}
+      </nav>
+
       {/* MAIN */}
-      <main style={{flex:1,overflowY:"auto",background:BG}}>
+      <main className="main-content" style={{flex:1,overflowY:"auto",background:BG}}>
 
         {/* HOME */}
         {tab==="home"&&(
@@ -1443,7 +1537,7 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
               <p style={{fontSize:13,color:GRAY}}>👋 Bienvenue,</p>
               <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:30,fontWeight:900,color:DARK,marginTop:4}}>{user.nom.split(" ")[0]} <Grad>!</Grad></h1>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
+            <div className="dash-grid" style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:14,marginBottom:24}}>
               {[{id:"ce",icon:"📖",color:"#1a3a8f",bg:"rgba(26,58,143,0.07)",t:"Compréhension Écrite",d:`${ceSeries.length} séries · 60 min · 699 pts`,done:Object.keys(attempts).filter(k=>k.startsWith("ce")).length},
                 {id:"co",icon:"🎧",color:MAG,bg:"rgba(192,24,110,0.07)",t:"Compréhension Orale",d:`${coSeries.length} séries · 35 min · 699 pts`,done:Object.keys(attempts).filter(k=>k.startsWith("co")).length}
               ].map(c=>(
