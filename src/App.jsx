@@ -1039,46 +1039,46 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
           )}
         </div>
 
-        {/* Image — grande zone */}
+        {/* Image — grande zone agrandie */}
         {q.image&&(
-          <div style={{marginBottom:20,borderRadius:14,overflow:"hidden",border:`1.5px solid ${BORDER}`,background:"#fff",boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}>
+          <div style={{marginBottom:16,borderRadius:14,overflow:"hidden",border:`1.5px solid ${BORDER}`,background:"#fff",boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}>
             <img
               src={q.image} alt="question"
-              style={{width:"100%",maxHeight:320,objectFit:"contain",display:"block",background:"#fafafa"}}
+              style={{width:"100%",maxHeight:420,objectFit:"contain",display:"block",background:"#fafafa"}}
               onError={e=>e.target.style.display="none"}
             />
           </div>
         )}
 
         {/* Texte question */}
-        <h2 style={{fontSize:18,fontWeight:700,color:DARK,marginBottom:22,lineHeight:1.6,fontFamily:"'Playfair Display',serif"}}>
+        <h2 style={{fontSize:17,fontWeight:700,color:DARK,marginBottom:14,lineHeight:1.55,fontFamily:"'Playfair Display',serif"}}>
           {q.text}
         </h2>
 
-        {/* Options */}
-        <div style={{display:"flex",flexDirection:"column",gap:11}}>
+        {/* Options — plus compactes */}
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {q.options.map((opt,i)=>{
             const letter=["A","B","C","D"][i];
             const isSel=answers[current]===i;
             return(
               <button key={i} onClick={()=>select(i)} style={{
-                display:"flex",alignItems:"center",gap:14,
-                padding:"14px 18px",
+                display:"flex",alignItems:"center",gap:12,
+                padding:"11px 16px",
                 border:`2px solid ${isSel?BLUE:BORDER}`,
-                borderRadius:12,
+                borderRadius:10,
                 background:isSel?"rgba(26,58,143,0.06)":"#fff",
-                cursor:"pointer",fontSize:14,color:DARK,
+                cursor:"pointer",fontSize:13,color:DARK,
                 fontFamily:"'DM Sans',sans-serif",
                 textAlign:"left",
                 transition:"all .18s",
                 boxShadow:isSel?"0 2px 12px rgba(26,58,143,0.15)":"none",
               }}>
                 <span style={{
-                  width:32,height:32,borderRadius:"50%",flexShrink:0,
+                  width:28,height:28,borderRadius:"50%",flexShrink:0,
                   background:isSel?G:BG,
                   color:isSel?"#fff":GRAY,
                   display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:13,fontWeight:700,
+                  fontSize:12,fontWeight:700,
                 }}>{letter}</span>
                 <span style={{fontWeight:isSel?600:400}}>{opt}</span>
               </button>
