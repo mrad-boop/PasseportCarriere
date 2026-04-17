@@ -1414,10 +1414,10 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
       <div className="card" style={{padding:24,marginBottom:14}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:16}}>Informations personnelles</h3>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <F label="Nom et Prénom" k="nom" placeholder="Mourad Benali"/>
-          <F label="Adresse email" k="email" type="email" placeholder="votre@email.com"/>
+          <Field label="Nom et Prénom" k="nom" placeholder="Mourad Benali"/>
+          <Field label="Adresse email" k="email" type="email" placeholder="votre@email.com"/>
         </div>
-        <F label="Adresse / Ville" k="adresse" placeholder="123 Rue Principale, Montréal"/>
+        <Field label="Adresse / Ville" k="adresse" placeholder="123 Rue Principale, Montréal"/>
         <div style={{marginBottom:14}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Pays de résidence</label>
           <select className="inp" value={form.pays} onChange={e=>upd("pays",e.target.value)}>
@@ -1425,8 +1425,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
           </select>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <F label="Téléphone" k="tel" placeholder="+1 514 000-0000"/>
-          <F label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000"/>
+          <Field label="Téléphone" k="tel" placeholder="+1 514 000-0000"/>
+          <Field label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000"/>
         </div>
       </div>
 
@@ -1926,14 +1926,23 @@ function JsonImportZone({onImport}) {
    ADMIN SUB-EDITORS: SiteConfig, Avantages, Packs
 ═══════════════════════════════════════════════════════════════ */
 function AdminSiteConfigEditor({siteConfig,onSave}) {
-  const [cfg,setCfg] = useState({...INIT_SITE_CONFIG,...siteConfig});
-  const upd = (k,v) => setCfg(c=>({...c,[k]:v}));
-  const F = ({label,k,multi}) => (
+  const cfg = useRef({...INIT_SITE_CONFIG,...siteConfig});
+  const refs = useRef({});
+
+  const getVal = () => {
+    const out = {...cfg.current};
+    Object.keys(refs.current).forEach(k=>{
+      if(refs.current[k]) out[k] = refs.current[k].value;
+    });
+    return out;
+  };
+
+  const Field = ({label,k,multi}) => (
     <div style={{marginBottom:12}}>
       <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:4,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
       {multi
-        ?<textarea className="inp" value={cfg[k]||""} onChange={e=>upd(k,e.target.value)} rows={2}/>
-        :<input className="inp" value={cfg[k]||""} onChange={e=>upd(k,e.target.value)}/>}
+        ?<textarea className="inp" defaultValue={cfg.current[k]||""} ref={el=>refs.current[k]=el} rows={2}/>
+        :<input className="inp" defaultValue={cfg.current[k]||""} ref={el=>refs.current[k]=el}/>}
     </div>
   );
   return (
@@ -1943,94 +1952,104 @@ function AdminSiteConfigEditor({siteConfig,onSave}) {
       <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🏠 Identité du site</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <F label="Nom du site" k="siteName"/>
-          <F label="Slogan" k="tagline"/>
-          <F label="Badge hero" k="heroBadge"/>
-          <F label="Copyright footer" k="footerCopyright"/>
-          <F label="Texte footer droite" k="footerRight"/>
+          <Field label="Nom du site" k="siteName"/>
+          <Field label="Slogan" k="tagline"/>
+          <Field label="Badge hero" k="heroBadge"/>
+          <Field label="Copyright footer" k="footerCopyright"/>
+          <Field label="Texte footer droite" k="footerRight"/>
         </div>
       </div>
 
       <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🦸 Section Héro</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <F label="Titre ligne 1" k="heroTitle1"/>
-          <F label="Titre ligne 2" k="heroTitle2"/>
-          <F label="CTA principal" k="ctaPrimary"/>
-          <F label="CTA secondaire" k="ctaSecondary"/>
+          <Field label="Titre ligne 1" k="heroTitle1"/>
+          <Field label="Titre ligne 2" k="heroTitle2"/>
+          <Field label="CTA principal" k="ctaPrimary"/>
+          <Field label="CTA secondaire" k="ctaSecondary"/>
         </div>
-        <F label="Sous-titre héro" k="heroSubtitle" multi/>
+        <Field label="Sous-titre héro" k="heroSubtitle" multi/>
         <div style={{fontSize:11,fontWeight:700,color:DARK,marginBottom:8,marginTop:4,textTransform:"uppercase",letterSpacing:.4}}>Statistiques</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
-          <F label="Stat 1 valeur" k="stat1Val"/>
-          <F label="Stat 1 label" k="stat1Label"/>
-          <F label="Stat 2 valeur" k="stat2Val"/>
-          <F label="Stat 2 label" k="stat2Label"/>
-          <F label="Stat 3 valeur" k="stat3Val"/>
-          <F label="Stat 3 label" k="stat3Label"/>
-          <F label="Stat 4 valeur" k="stat4Val"/>
-          <F label="Stat 4 label" k="stat4Label"/>
+          <Field label="Stat 1 valeur" k="stat1Val"/>
+          <Field label="Stat 1 label" k="stat1Label"/>
+          <Field label="Stat 2 valeur" k="stat2Val"/>
+          <Field label="Stat 2 label" k="stat2Label"/>
+          <Field label="Stat 3 valeur" k="stat3Val"/>
+          <Field label="Stat 3 label" k="stat3Label"/>
+          <Field label="Stat 4 valeur" k="stat4Val"/>
+          <Field label="Stat 4 label" k="stat4Label"/>
         </div>
         <div style={{fontSize:11,fontWeight:700,color:DARK,marginBottom:8,marginTop:8,textTransform:"uppercase",letterSpacing:.4}}>Badges de confiance</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-          <F label="Badge 1" k="trust1"/>
-          <F label="Badge 2" k="trust2"/>
-          <F label="Badge 3" k="trust3"/>
+          <Field label="Badge 1" k="trust1"/>
+          <Field label="Badge 2" k="trust2"/>
+          <Field label="Badge 3" k="trust3"/>
         </div>
       </div>
 
       <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>📦 Sections page d'accueil</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <F label="Description CE" k="ceDesc"/>
-          <F label="Description CO" k="coDesc"/>
-          <F label="Titre avantages" k="avantagesTitle"/>
-          <F label="Sous-titre avantages" k="avantagesSubtitle"/>
-          <F label="Titre packs" k="packsTitle"/>
-          <F label="Sous-titre packs" k="packsSubtitle"/>
-          <F label="Titre témoignages" k="testimonialsTitle"/>
-          <F label="Sous-titre témoignages" k="testimonialsSubtitle"/>
+          <Field label="Description CE" k="ceDesc"/>
+          <Field label="Description CO" k="coDesc"/>
+          <Field label="Titre avantages" k="avantagesTitle"/>
+          <Field label="Sous-titre avantages" k="avantagesSubtitle"/>
+          <Field label="Titre packs" k="packsTitle"/>
+          <Field label="Sous-titre packs" k="packsSubtitle"/>
+          <Field label="Titre témoignages" k="testimonialsTitle"/>
+          <Field label="Sous-titre témoignages" k="testimonialsSubtitle"/>
         </div>
       </div>
 
       <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🎯 CTA final</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <F label="Titre CTA final" k="ctaFinalTitle"/>
-          <F label="Texte CTA final" k="ctaFinalDesc"/>
+          <Field label="Titre CTA final" k="ctaFinalTitle"/>
+          <Field label="Texte CTA final" k="ctaFinalDesc"/>
         </div>
       </div>
 
       <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
         <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🚀 Services Coming Soon</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <F label="Titre section" k="comingSoonTitle"/>
-          <F label="Sous-titre section" k="comingSoonSubtitle"/>
+          <Field label="Titre section" k="comingSoonTitle"/>
+          <Field label="Sous-titre section" k="comingSoonSubtitle"/>
         </div>
         <div style={{background:"rgba(160,25,126,0.06)",border:"1px solid rgba(160,25,126,0.2)",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
           <div style={{fontSize:10,fontWeight:700,color:"#a0197e",marginBottom:8,textTransform:"uppercase"}}>📄 Générateur de CV</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <F label="Titre" k="cvTitle"/>
-            <F label="Description" k="cvDesc"/>
+            <Field label="Titre" k="cvTitle"/>
+            <Field label="Description" k="cvDesc"/>
           </div>
         </div>
         <div style={{background:"rgba(5,150,105,0.06)",border:"1px solid rgba(5,150,105,0.2)",borderRadius:8,padding:"10px 12px"}}>
           <div style={{fontSize:10,fontWeight:700,color:"#059669",marginBottom:8,textTransform:"uppercase"}}>💼 HireMe — Emploi IA</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-            <F label="Titre" k="hiremeTitle"/>
-            <F label="Description" k="hiremeDesc"/>
+            <Field label="Titre" k="hiremeTitle"/>
+            <Field label="Description" k="hiremeDesc"/>
           </div>
         </div>
       </div>
 
-      <button className="btn btn-p btn-sm" onClick={()=>onSave(cfg)}>💾 Enregistrer toute la configuration</button>
+      <button className="btn btn-p btn-sm" onClick={()=>onSave(getVal())}>💾 Enregistrer toute la configuration</button>
     </div>
   );
 }
 
 function AdminAvantagesEditor({avantages,onSave}) {
   const [items,setItems] = useState([...avantages]);
-  const upd = (i,k,v) => setItems(arr=>arr.map((a,idx)=>idx===i?{...a,[k]:v}:a));
+  const rowRefs = useRef({});
+
+  const collectAndSave = () => {
+    const updated = items.map((av,i)=>({
+      icon:  rowRefs.current[`${i}_icon`]?.value  ?? av.icon,
+      title: rowRefs.current[`${i}_title`]?.value ?? av.title,
+      desc:  rowRefs.current[`${i}_desc`]?.value  ?? av.desc,
+    }));
+    onSave(updated);
+  };
+
   return (
     <div className="card" style={{padding:22,marginBottom:14}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
@@ -2038,30 +2057,39 @@ function AdminAvantagesEditor({avantages,onSave}) {
         {items.length<6&&<button className="btn btn-o btn-sm" onClick={()=>setItems(a=>[...a,{icon:"🔧",title:"Nouvel avantage",desc:"Description"}])}>+ Ajouter</button>}
       </div>
       {items.map((av,i)=>(
-        <div key={i} style={{background:BG,border:`1px solid ${BORDER}`,borderRadius:10,padding:"12px 14px",marginBottom:9,display:"grid",gridTemplateColumns:"60px 1fr 1fr auto",gap:10,alignItems:"center"}}>
+        <div key={`av-${i}`} style={{background:BG,border:`1px solid ${BORDER}`,borderRadius:10,padding:"12px 14px",marginBottom:9,display:"grid",gridTemplateColumns:"60px 1fr 1fr auto",gap:10,alignItems:"center"}}>
           <div>
             <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3}}>Icône</label>
-            <input className="inp" value={av.icon} onChange={e=>upd(i,"icon",e.target.value)} style={{fontSize:18,textAlign:"center",padding:"5px"}}/>
+            <input className="inp" defaultValue={av.icon} ref={el=>rowRefs.current[`${i}_icon`]=el} style={{fontSize:18,textAlign:"center",padding:"5px"}}/>
           </div>
           <div>
             <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3}}>Titre</label>
-            <input className="inp" value={av.title} onChange={e=>upd(i,"title",e.target.value)} style={{fontSize:12}}/>
+            <input className="inp" defaultValue={av.title} ref={el=>rowRefs.current[`${i}_title`]=el} style={{fontSize:12}}/>
           </div>
           <div>
             <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3}}>Description</label>
-            <input className="inp" value={av.desc} onChange={e=>upd(i,"desc",e.target.value)} style={{fontSize:12}}/>
+            <input className="inp" defaultValue={av.desc} ref={el=>rowRefs.current[`${i}_desc`]=el} style={{fontSize:12}}/>
           </div>
           <button onClick={()=>setItems(a=>a.filter((_,idx)=>idx!==i))} style={{background:"rgba(220,38,38,0.1)",border:"none",color:"#dc2626",borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:13}}>✕</button>
         </div>
       ))}
-      <button className="btn btn-p btn-sm" onClick={()=>onSave(items)} style={{marginTop:8}}>💾 Enregistrer les avantages</button>
+      <button className="btn btn-p btn-sm" onClick={collectAndSave} style={{marginTop:8}}>💾 Enregistrer les avantages</button>
     </div>
   );
 }
 
 function AdminTestimonialsEditor({testimonials,onSave}) {
   const [items,setItems] = useState([...testimonials]);
-  const upd = (i,k,v) => setItems(arr=>arr.map((t,idx)=>idx===i?{...t,[k]:v}:t));
+  const rowRefs = useRef({});
+  const collectAndSave = () => {
+    const updated = items.map((t,i)=>({
+      name:  rowRefs.current[i+"_name"]?.value  ?? t.name,
+      pays:  rowRefs.current[i+"_pays"]?.value  ?? t.pays,
+      level: rowRefs.current[i+"_level"]?.value ?? t.level,
+      text:  rowRefs.current[i+"_text"]?.value  ?? t.text,
+    }));
+    onSave(updated);
+  };
   return (
     <div className="card" style={{padding:22,marginBottom:14}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
@@ -2069,63 +2097,74 @@ function AdminTestimonialsEditor({testimonials,onSave}) {
         <button className="btn btn-o btn-sm" onClick={()=>setItems(a=>[...a,{name:"Prénom N.",pays:"🌍",level:"B1→B2",text:"Témoignage ici…"}])}>+ Ajouter</button>
       </div>
       {items.map((t,i)=>(
-        <div key={i} style={{background:BG,border:`1px solid ${BORDER}`,borderRadius:10,padding:"12px 14px",marginBottom:9}}>
+        <div key={"tm"+i} style={{background:BG,border:`1px solid ${BORDER}`,borderRadius:10,padding:"12px 14px",marginBottom:9}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 60px 80px auto",gap:9,marginBottom:8,alignItems:"center"}}>
             <div>
               <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3}}>Nom</label>
-              <input className="inp" value={t.name} onChange={e=>upd(i,"name",e.target.value)} style={{fontSize:12}}/>
+              <input className="inp" defaultValue={t.name} ref={el=>rowRefs.current[i+"_name"]=el} style={{fontSize:12}}/>
             </div>
             <div>
               <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3}}>Drapeau</label>
-              <input className="inp" value={t.pays} onChange={e=>upd(i,"pays",e.target.value)} style={{fontSize:16,textAlign:"center",padding:"5px"}}/>
+              <input className="inp" defaultValue={t.pays} ref={el=>rowRefs.current[i+"_pays"]=el} style={{fontSize:16,textAlign:"center",padding:"5px"}}/>
             </div>
             <div>
               <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3}}>Niveau (ex: B1→B2)</label>
-              <input className="inp" value={t.level} onChange={e=>upd(i,"level",e.target.value)} style={{fontSize:11}}/>
+              <input className="inp" defaultValue={t.level} ref={el=>rowRefs.current[i+"_level"]=el} style={{fontSize:11}}/>
             </div>
             <button onClick={()=>setItems(a=>a.filter((_,idx)=>idx!==i))} style={{background:"rgba(220,38,38,0.1)",border:"none",color:"#dc2626",borderRadius:7,padding:"6px 10px",cursor:"pointer",fontSize:13,marginTop:16}}>✕</button>
           </div>
           <div>
             <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3}}>Témoignage</label>
-            <textarea className="inp" value={t.text} onChange={e=>upd(i,"text",e.target.value)} rows={2} style={{fontSize:12}}/>
+            <textarea className="inp" defaultValue={t.text} ref={el=>rowRefs.current[i+"_text"]=el} rows={2} style={{fontSize:12}}/>
           </div>
         </div>
       ))}
-      <button className="btn btn-p btn-sm" onClick={()=>onSave(items)} style={{marginTop:4}}>💾 Enregistrer les témoignages</button>
+      <button className="btn btn-p btn-sm" onClick={collectAndSave} style={{marginTop:4}}>💾 Enregistrer les témoignages</button>
     </div>
   );
 }
 
 function AdminPacksEditor({packs,onSave}) {
   const [items,setItems] = useState(JSON.parse(JSON.stringify(packs)));
-  const updPack = (i,k,v) => setItems(arr=>arr.map((p,idx)=>idx===i?{...p,[k]:v}:p));
-  const updFeature = (pi,fi,v) => setItems(arr=>arr.map((p,idx)=>idx===pi?{...p,features:p.features.map((f,fIdx)=>fIdx===fi?v:f)}:p));
+  const packRefs = useRef({});
   const addFeature = pi => setItems(arr=>arr.map((p,idx)=>idx===pi?{...p,features:[...p.features,""]}:p));
   const removeFeature = (pi,fi) => setItems(arr=>arr.map((p,idx)=>idx===pi?{...p,features:p.features.filter((_,fIdx)=>fIdx!==fi)}:p));
-
+  const toggleHighlight = (i,v) => setItems(arr=>arr.map((p,idx)=>idx===i?{...p,highlight:v}:p));
+  const collectAndSave = () => {
+    const updated = items.map((pack,i)=>({
+      ...pack,
+      name:  packRefs.current[i+"_name"]?.value  ?? pack.name,
+      price: packRefs.current[i+"_price"]?.value ?? pack.price,
+      acces: packRefs.current[i+"_acces"]?.value ?? pack.acces,
+      color: packRefs.current[i+"_color"]?.value ?? pack.color,
+      bonus: packRefs.current[i+"_bonus"]?.value ?? pack.bonus,
+      features: pack.features.map((_,fi)=>packRefs.current[i+"_feat_"+fi]?.value ?? pack.features[fi]),
+    }));
+    onSave(updated);
+  };
   return (
     <div className="card" style={{padding:22,marginBottom:14}}>
       <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:16}}>📦 Packs de Révision</h3>
       {items.map((pack,i)=>(
-        <div key={pack.id} style={{background:BG,border:`1px solid ${BORDER}`,borderRadius:12,padding:16,marginBottom:14}}>
+        <div key={"pk"+pack.id} style={{background:BG,border:`1px solid ${BORDER}`,borderRadius:12,padding:16,marginBottom:14}}>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
             <div style={{width:12,height:12,borderRadius:"50%",background:pack.color,flexShrink:0}}/>
             <span style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:DARK}}>{pack.name}</span>
             <label style={{display:"flex",alignItems:"center",gap:6,marginLeft:"auto",fontSize:12,cursor:"pointer"}}>
-              <input type="checkbox" checked={pack.highlight} onChange={e=>updPack(i,"highlight",e.target.checked)}/> Mis en avant
+              <input type="checkbox" checked={pack.highlight} onChange={e=>toggleHighlight(i,e.target.checked)}/> Mis en avant
             </label>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:9,marginBottom:10}}>
-            {[["Nom",pack.name,"name"],["Prix (ex: 29.99)",pack.price,"price"],["Accès (ex: 1 Mois)",pack.acces,"acces"],["Couleur (#hex)",pack.color,"color"]].map(([l,v,k])=>(
+            {[["Nom","name",pack.name],["Prix","price",pack.price],["Accès","acces",pack.acces],["Couleur","color",pack.color]].map(([l,k,v])=>(
               <div key={k}>
                 <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3,textTransform:"uppercase"}}>{l}</label>
-                <input className="inp" value={v} onChange={e=>updPack(i,k,e.target.value)} style={{fontSize:12}}/>
+                <input className="inp" defaultValue={v} ref={el=>packRefs.current[i+"_"+k]=el} style={{fontSize:12}}/>
               </div>
             ))}
           </div>
           <div style={{marginBottom:8}}>
             <label style={{display:"block",fontSize:10,color:GRAY,marginBottom:3,textTransform:"uppercase"}}>Bonus</label>
-            <input className="inp" value={pack.bonus||""} onChange={e=>updPack(i,"bonus",e.target.value)} style={{fontSize:12}}/>
+            <input className="inp" defaultValue={pack.bonus||""} ref={el=>packRefs.current[i+"_bonus"]=el} style={{fontSize:12}}/>
           </div>
           <div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
@@ -2134,14 +2173,14 @@ function AdminPacksEditor({packs,onSave}) {
             </div>
             {pack.features.map((f,fi)=>(
               <div key={fi} style={{display:"flex",gap:6,marginBottom:5,alignItems:"center"}}>
-                <input className="inp" value={f} onChange={e=>updFeature(i,fi,e.target.value)} style={{fontSize:11,flex:1}}/>
+                <input className="inp" defaultValue={f} ref={el=>packRefs.current[i+"_feat_"+fi]=el} style={{fontSize:11,flex:1}}/>
                 <button onClick={()=>removeFeature(i,fi)} style={{background:"rgba(220,38,38,0.1)",border:"none",color:"#dc2626",borderRadius:6,padding:"4px 8px",cursor:"pointer",fontSize:11,flexShrink:0}}>✕</button>
               </div>
             ))}
           </div>
         </div>
       ))}
-      <button className="btn btn-p btn-sm" onClick={()=>onSave(items)}>💾 Enregistrer les packs</button>
+      <button className="btn btn-p btn-sm" onClick={collectAndSave}>💾 Enregistrer les packs</button>
     </div>
   );
 }
