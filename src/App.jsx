@@ -851,8 +851,8 @@ function SeriesList({type,series,isPremium,attempts,onStart}) {
         {series.map((serie,idx)=>{
           const att = attempts[serie.id];
           const isLocked = serie.premium && !isPremium;
-          const doneToday = att && !isPremium && new Date(att.date).toDateString()===today;
-          const canRetry = isPremium || !att || new Date(att.date).toDateString()!==today;
+          const doneToday = false; // désactivé temporairement
+          const canRetry = true;   // désactivé temporairement
           const levelInfo = att ? TRANCHES.slice().reverse().find(t=>att.correct>=t.min)||TRANCHES[0] : null;
 
           return (
