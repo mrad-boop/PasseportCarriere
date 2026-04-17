@@ -422,6 +422,13 @@ const INIT_SITE_CONFIG = {
   // Modules labels
   ceDesc: "40 séries · 39 questions · 60 min",
   coDesc: "40 séries · 39 questions · 35 min",
+  // Services coming soon
+  comingSoonTitle: "De nouveaux services arrivent",
+  comingSoonSubtitle: "Votre préparation ne s'arrête pas au TCF — nous construisons votre avenir complet",
+  cvTitle: "Générateur de CV",
+  cvDesc: "Créez un CV professionnel adapté au marché canadien en quelques minutes, avec l'aide de l'IA.",
+  hiremeTitle: "HireMe — Emploi IA",
+  hiremeDesc: "Offres d'emploi scorées par IA selon votre profil. Lettre de motivation générée en 1 clic.",
 };
 
 function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials,registerSuccess,onCloseSuccess}) {
@@ -624,6 +631,31 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
                 {!m.active&&<div style={{marginTop:12,display:"inline-flex",alignItems:"center",gap:5,fontSize:11,color:GRAY,fontWeight:600}}>🚀 Coming Soon</div>}
               </div>
             ))}
+          </div>
+
+          {/* ── 2 SERVICES COMING SOON ── */}
+          <div style={{marginBottom:40}}>
+            <div style={{textAlign:"center",marginBottom:22}}>
+              <span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"4px 14px",borderRadius:100,background:"rgba(90,101,119,0.1)",border:`1px solid ${BORDER}`,fontSize:11,fontWeight:700,color:GRAY,letterSpacing:.5}}>🚀 PROCHAINEMENT</span>
+              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:DARK,marginTop:10,marginBottom:6}}>{cfg.comingSoonTitle}</h3>
+              <p style={{fontSize:13,color:GRAY}}>{cfg.comingSoonSubtitle}</p>
+            </div>
+            <div className="coming-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+              {[
+                {icon:"📄",color:"#a0197e",bg:"rgba(160,25,126,0.06)",border:"rgba(160,25,126,0.2)",t:cfg.cvTitle,d:cfg.cvDesc,chips:["IA Rédactrice","4 formats","ATS optimisé"]},
+                {icon:"💼",color:"#059669",bg:"rgba(5,150,105,0.06)",border:"rgba(5,150,105,0.2)",t:cfg.hiremeTitle,d:cfg.hiremeDesc,chips:["Score compatibilité","Lettre IA","Matching intelligent"]},
+              ].map((s,i)=>(
+                <div key={i} style={{background:"#fff",border:`1.5px dashed ${s.border}`,borderRadius:16,padding:26,position:"relative",overflow:"hidden",opacity:.8}}>
+                  <div style={{position:"absolute",top:12,right:14,background:"rgba(90,101,119,0.1)",borderRadius:100,padding:"3px 10px",fontSize:10,fontWeight:700,color:GRAY}}>🔒 Coming Soon</div>
+                  <div style={{width:48,height:48,borderRadius:13,background:s.bg,border:`1.5px solid ${s.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,marginBottom:14}}>{s.icon}</div>
+                  <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK,marginBottom:6}}>{s.t}</h3>
+                  <p style={{fontSize:12,color:GRAY,lineHeight:1.7,marginBottom:12}}>{s.d}</p>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {s.chips.map(c=><span key={c} style={{fontSize:11,padding:"3px 10px",borderRadius:100,background:s.bg,color:s.color,fontWeight:600,border:`1px solid ${s.border}`}}>{c}</span>)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ── NOS AVANTAGES (depuis image 1) ── */}
@@ -1918,6 +1950,28 @@ function AdminSiteConfigEditor({siteConfig,onSave}) {
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           <F label="Titre CTA final" k="ctaFinalTitle"/>
           <F label="Texte CTA final" k="ctaFinalDesc"/>
+        </div>
+      </div>
+
+      <div style={{background:"rgba(26,58,143,0.05)",border:"1px solid rgba(26,58,143,0.15)",borderRadius:9,padding:"12px 14px",marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:BLUE,marginBottom:10,textTransform:"uppercase",letterSpacing:.5}}>🚀 Services Coming Soon</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <F label="Titre section" k="comingSoonTitle"/>
+          <F label="Sous-titre section" k="comingSoonSubtitle"/>
+        </div>
+        <div style={{background:"rgba(160,25,126,0.06)",border:"1px solid rgba(160,25,126,0.2)",borderRadius:8,padding:"10px 12px",marginBottom:8}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#a0197e",marginBottom:8,textTransform:"uppercase"}}>📄 Générateur de CV</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <F label="Titre" k="cvTitle"/>
+            <F label="Description" k="cvDesc"/>
+          </div>
+        </div>
+        <div style={{background:"rgba(5,150,105,0.06)",border:"1px solid rgba(5,150,105,0.2)",borderRadius:8,padding:"10px 12px"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#059669",marginBottom:8,textTransform:"uppercase"}}>💼 HireMe — Emploi IA</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <F label="Titre" k="hiremeTitle"/>
+            <F label="Description" k="hiremeDesc"/>
+          </div>
         </div>
       </div>
 
