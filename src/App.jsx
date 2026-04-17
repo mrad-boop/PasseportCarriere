@@ -1010,83 +1010,176 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
 
   if(!q) return null;
 
+  const answered = Object.keys(answers).length;
+  const isUrgent = timeLeft < 300;
+
   return (
-    <div style={{maxWidth:780,margin:"0 auto",padding:"20px 24px"}}>
-      {/* Header bar */}
-      <div style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:13,padding:"12px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:14}}>
-        <button onClick={onAbort} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,color:GRAY,fontFamily:"'DM Sans',sans-serif"}}>← Quitter</button>
-        <div style={{flex:1}}>
-          <div style={{fontSize:11,color:GRAY,marginBottom:4}}>{serie.title} · Q{current+1}/{questions.length}</div>
-          <div style={{height:5,background:BG,borderRadius:3,overflow:"hidden"}}>
-            <div style={{height:"100%",width:`${((current+1)/questions.length)*100}%`,background:G,borderRadius:3,transition:"width .3s"}}/>
-          </div>
-        </div>
-        <div style={{textAlign:"center",flexShrink:0}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:900,color:timeLeft<300?"#dc2626":DARK}}>{formatTime(timeLeft)}</div>
-          <div style={{height:3,width:70,background:BG,borderRadius:2,overflow:"hidden",marginTop:3}}>
-            <div style={{height:"100%",width:`${pct}%`,background:timeLeft<300?"#dc2626":G,borderRadius:2,transition:"width 1s"}}/>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end",maxWidth:200}}>
-          {Object.keys(answers).length>0&&<button className="btn btn-danger btn-sm" onClick={()=>handleFinish()}>Terminer ({Object.keys(answers).length}/{questions.length})</button>}
-        </div>
-      </div>
+    <div style={{display:"flex",height:"calc(100vh - 58px)",fontFamily:"'DM Sans',sans-serif",overflow:"hidden"}}>
 
-      {/* Audio player for CO */}
-      {serie.type==="CO"&&serie.audioUrl&&(
-        <div style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:11,padding:"12px 16px",marginBottom:14,display:"flex",alignItems:"center",gap:12}}>
-          <span style={{fontSize:20}}>🎧</span>
-          <audio ref={audioRef} controls src={serie.audioUrl} style={{flex:1,height:36}}/>
-        </div>
-      )}
+      {/* ── GAUCHE : Zone question ── */}
+      <div style={{flex:1,overflowY:"auto",padding:"28px 32px",background:BG}}>
 
-      {/* Question card */}
-      <div className="card si" key={current} style={{padding:24,marginBottom:14}}>
-        {/* Image */}
-        {q.image&&(
-          <div style={{marginBottom:16,borderRadius:10,overflow:"hidden",border:`1px solid ${BORDER}`}}>
-            <img src={q.image} alt="question" style={{width:"100%",maxHeight:220,objectFit:"cover",display:"block"}} onError={e=>e.target.style.display="none"}/>
+        {/* Audio CO */}
+        {serie.type==="CO"&&serie.audioUrl&&(
+          <div style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:12,padding:"12px 18px",marginBottom:18,display:"flex",alignItems:"center",gap:12,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
+            <div style={{width:36,height:36,borderRadius:"50%",background:"rgba(160,25,126,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>🎧</div>
+            <audio ref={audioRef} controls src={serie.audioUrl} style={{flex:1,height:36}}/>
           </div>
         )}
 
-        {/* Question type badge */}
-        {serie.type==="CO"&&(
-          <div style={{marginBottom:10}}>
-            <span className="tag" style={{background:"rgba(160,25,126,0.08)",color:MAG,fontSize:11}}>
-              {q.isImageChoice?"🖼️ Image + 4 propositions audio":"🎧 Document sonore + 4 réponses"}
+        {/* Numéro question */}
+        <div style={{display:"inline-flex",alignItems:"center",gap:8,marginBottom:18}}>
+          <div style={{background:G,borderRadius:100,padding:"4px 16px",fontSize:13,fontWeight:700,color:"#fff",boxShadow:"0 2px 10px rgba(45,91,227,0.25)"}}>
+            Question {current+1} / {questions.length}
+          </div>
+          {serie.type==="CO"&&(
+            <span style={{background:"rgba(160,25,126,0.09)",color:MAG,borderRadius:100,padding:"4px 12px",fontSize:11,fontWeight:700}}>
+              {q.isImageChoice?"🖼️ Image + 4 propositions":"🎧 Document sonore"}
             </span>
+          )}
+        </div>
+
+        {/* Image — grande zone */}
+        {q.image&&(
+          <div style={{marginBottom:20,borderRadius:14,overflow:"hidden",border:`1.5px solid ${BORDER}`,background:"#fff",boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}>
+            <img
+              src={q.image} alt="question"
+              style={{width:"100%",maxHeight:320,objectFit:"contain",display:"block",background:"#fafafa"}}
+              onError={e=>e.target.style.display="none"}
+            />
           </div>
         )}
 
-        <h3 style={{fontSize:15,fontWeight:700,color:DARK,marginBottom:18,lineHeight:1.55}}>{q.text}</h3>
+        {/* Texte question */}
+        <h2 style={{fontSize:18,fontWeight:700,color:DARK,marginBottom:22,lineHeight:1.6,fontFamily:"'Playfair Display',serif"}}>
+          {q.text}
+        </h2>
 
-        <div style={{display:"flex",flexDirection:"column",gap:9}}>
+        {/* Options */}
+        <div style={{display:"flex",flexDirection:"column",gap:11}}>
           {q.options.map((opt,i)=>{
-            const letter = ["A","B","C","D"][i];
-            const isSelected = answers[current]===i;
+            const letter=["A","B","C","D"][i];
+            const isSel=answers[current]===i;
             return(
-              <button key={i} className={`option-btn${isSelected?" selected":""}`} onClick={()=>select(i)}>
-                <span style={{width:24,height:24,borderRadius:"50%",background:isSelected?G:BG,color:isSelected?"#fff":GRAY,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}}>{letter}</span>
-                {opt}
+              <button key={i} onClick={()=>select(i)} style={{
+                display:"flex",alignItems:"center",gap:14,
+                padding:"14px 18px",
+                border:`2px solid ${isSel?BLUE:BORDER}`,
+                borderRadius:12,
+                background:isSel?"rgba(26,58,143,0.06)":"#fff",
+                cursor:"pointer",fontSize:14,color:DARK,
+                fontFamily:"'DM Sans',sans-serif",
+                textAlign:"left",
+                transition:"all .18s",
+                boxShadow:isSel?"0 2px 12px rgba(26,58,143,0.15)":"none",
+              }}>
+                <span style={{
+                  width:32,height:32,borderRadius:"50%",flexShrink:0,
+                  background:isSel?G:BG,
+                  color:isSel?"#fff":GRAY,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:13,fontWeight:700,
+                }}>{letter}</span>
+                <span style={{fontWeight:isSel?600:400}}>{opt}</span>
               </button>
             );
           })}
         </div>
+
+        {/* Nav bas */}
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:28}}>
+          <button className="btn btn-o" onClick={()=>setCurrent(c=>Math.max(0,c-1))} disabled={current===0} style={{padding:"10px 22px"}}>← Précédent</button>
+          {current<questions.length-1
+            ?<button className="btn btn-p" onClick={()=>setCurrent(c=>c+1)} style={{padding:"10px 22px"}}>Suivant →</button>
+            :<button className="btn btn-danger" onClick={()=>handleFinish()} style={{padding:"10px 22px"}}>Terminer ✓</button>
+          }
+        </div>
       </div>
 
-      {/* Navigation */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <button className="btn btn-o btn-sm" onClick={()=>setCurrent(c=>Math.max(0,c-1))} disabled={current===0}>← Précédent</button>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center",maxWidth:400}}>
-          {questions.map((_,i)=>(
-            <div key={i} onClick={()=>setCurrent(i)} style={{width:20,height:20,borderRadius:4,background:answers[i]!==undefined?G:i===current?"rgba(26,58,143,0.15)":BG,border:`1px solid ${i===current?BLUE:BORDER}`,cursor:"pointer",fontSize:9,display:"flex",alignItems:"center",justifyContent:"center",color:answers[i]!==undefined?"#fff":GRAY,fontWeight:600}}>{i+1}</div>
-          ))}
+      {/* ── DROITE : Timer + Navigation ── */}
+      <div style={{width:280,background:DARK,display:"flex",flexDirection:"column",borderLeft:"1px solid rgba(255,255,255,0.07)",flexShrink:0,overflowY:"auto"}}>
+
+        {/* Header sidebar */}
+        <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+            <div style={{width:22,height:22,borderRadius:6,background:G,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff"}}>PC</div>
+            <span style={{fontSize:12,fontWeight:700,color:"#fff",fontFamily:"'Playfair Display',serif"}}>Passeport Carrière</span>
+          </div>
+          <div style={{fontSize:10,color:"rgba(255,255,255,0.35)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{serie.title}</div>
         </div>
-        {current<questions.length-1 ? (
-          <button className="btn btn-p btn-sm" onClick={()=>setCurrent(c=>c+1)}>Suivant →</button>
-        ) : (
-          <button className="btn btn-danger btn-sm" onClick={()=>handleFinish()}>Terminer ✓</button>
-        )}
+
+        {/* Timer */}
+        <div style={{padding:"20px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>⏱ Temps restant</div>
+          <div style={{
+            fontFamily:"'Playfair Display',serif",
+            fontSize:38,fontWeight:900,
+            color:isUrgent?"#f87171":"#fff",
+            lineHeight:1,marginBottom:10,
+            transition:"color .5s",
+          }}>{formatTime(timeLeft)}</div>
+          <div style={{height:6,background:"rgba(255,255,255,0.08)",borderRadius:3,overflow:"hidden"}}>
+            <div style={{
+              height:"100%",
+              width:`${pct}%`,
+              background:isUrgent?"#ef4444":G,
+              borderRadius:3,transition:"width 1s, background .5s"
+            }}/>
+          </div>
+          {isUrgent&&<div style={{fontSize:10,color:"#f87171",marginTop:6,fontWeight:600}}>⚠️ Moins de 5 minutes !</div>}
+        </div>
+
+        {/* Progression */}
+        <div style={{padding:"14px 18px",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>📊 Progression</div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <span style={{fontSize:12,color:"rgba(255,255,255,0.5)"}}>Répondues</span>
+            <span style={{fontSize:12,fontWeight:700,color:"#fff"}}>{answered} / {questions.length}</span>
+          </div>
+          <div style={{height:5,background:"rgba(255,255,255,0.08)",borderRadius:3,overflow:"hidden"}}>
+            <div style={{height:"100%",width:`${(answered/questions.length)*100}%`,background:"#22c55e",borderRadius:3,transition:"width .4s"}}/>
+          </div>
+          <div style={{display:"flex",gap:10,marginTop:10}}>
+            {[["●","Actuelle","rgba(45,91,227,0.8)"],["●","Répondue","#22c55e"],["●","Non rép.","rgba(255,255,255,0.15)"]].map(([dot,label,color])=>(
+              <div key={label} style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:"rgba(255,255,255,0.4)"}}>
+                <span style={{color,fontSize:10}}>{dot}</span>{label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Grille questions */}
+        <div style={{padding:"14px 18px",flex:1}}>
+          <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:10}}>Navigation</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5}}>
+            {questions.map((_,i)=>{
+              const isCur=i===current;
+              const isDone=answers[i]!==undefined;
+              return(
+                <div key={i} onClick={()=>setCurrent(i)} style={{
+                  height:36,borderRadius:7,
+                  background:isCur?"rgba(45,91,227,0.8)":isDone?"rgba(34,197,94,0.25)":"rgba(255,255,255,0.06)",
+                  border:`1.5px solid ${isCur?"#2d5be3":isDone?"#22c55e":"rgba(255,255,255,0.1)"}`,
+                  cursor:"pointer",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:11,fontWeight:700,
+                  color:isCur?"#fff":isDone?"#4ade80":"rgba(255,255,255,0.4)",
+                  transition:"all .15s",
+                }}>{i+1}</div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div style={{padding:"14px 18px",borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",flexDirection:"column",gap:8}}>
+          <button className="btn btn-danger" onClick={()=>handleFinish()} style={{width:"100%",fontSize:12,padding:"10px"}}>
+            ✓ Terminer ({answered}/{questions.length})
+          </button>
+          <button onClick={onAbort} style={{width:"100%",background:"transparent",border:"1px solid rgba(255,255,255,0.12)",borderRadius:9,padding:"8px",fontSize:11,color:"rgba(255,255,255,0.4)",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+            ← Quitter l'examen
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1295,9 +1388,10 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
     return (
       <div style={{minHeight:"100vh",background:BG,fontFamily:"'DM Sans',sans-serif"}}>
         <style>{CSS}</style>
-        <div style={{background:DARK,height:48,display:"flex",alignItems:"center",padding:"0 24px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-          <span style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#fff"}}>LaunchPad &nbsp;—&nbsp; </span>
-          <span style={{fontSize:13,color:"rgba(255,255,255,0.5)"}}>{activeSerie.title}</span>
+        <div style={{background:DARK,height:58,display:"flex",alignItems:"center",padding:"0 24px",borderBottom:"1px solid rgba(255,255,255,0.07)",position:"sticky",top:0,zIndex:50}}>
+          <div style={{width:26,height:26,borderRadius:7,background:G,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",marginRight:10}}>PC</div>
+          <span style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#fff"}}>Passeport Carrière &nbsp;—&nbsp;</span>
+          <span style={{fontSize:12,color:"rgba(255,255,255,0.45)"}}>{activeSerie.title}</span>
         </div>
         <ExamEngine serie={activeSerie} isPremium={isPremium} onFinish={finishExam} onAbort={abortExam}/>
       </div>
