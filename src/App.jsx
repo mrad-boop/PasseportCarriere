@@ -2463,34 +2463,106 @@ export default function App() {
   const [packs,       setPacks]       = useState(()=>LS.get("lp_packs",INIT_PACKS));
   const [avantages,   setAvantages]   = useState(()=>LS.get("lp_avantages",INIT_AVANTAGES));
   const [testimonials,setTestimonials]= useState(()=>LS.get("lp_testimonials",INIT_TESTIMONIALS));
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   const API = "https://pc-backend-rr9v.onrender.com";
   const token = () => localStorage.getItem("pc_token");
   const authH = () => ({"Content-Type":"application/json", ...(token()?{Authorization:`Bearer ${token()}`}:{})});
 
-  // Charger les séries depuis le backend au démarrage
-  useEffect(()=>{
-    fetch(`${API}/api/series`,{headers:authH()})
-      .then(r=>r.json())
-      .then(data=>{ if(Array.isArray(data)&&data.length>0) setSeries(data); })
-      .catch(()=>{});
-    // Charger les users si admin
-    fetch(`${API}/api/users`,{headers:authH()})
-      .then(r=>r.json())
-      .then(data=>{ if(Array.isArray(data)) setUsers(data); })
-      .catch(()=>{});
-  },[]);
+  const INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
+  const inactivityTimer = useRef(null);
 
-  const [registerSuccess, setRegisterSuccess] = useState(false);
+  const logout = useCallback(() => {
+    localStorage.removeItem("pc_token");
+    localStorage.removeItem("pc_session");
+    setCurUser(null);
+    setScreen("landing");
+  }, []);
+
+  const resetInactivityTimer = useCallback(() => {
+    clearTimeout(inactivityTimer.current);
+    inactivityTimer.current = setTimeout(() => {
+      const session = LS.get("pc_session", null);
+      if(session) logout();
+    }, INACTIVITY_MS);
+  }, [logout]);
+
+  // Restaurer la session au refresh
+  useEffect(() => {
+    const session = LS.get("pc_session", null);
+    const t = token();
+    if(session && t) {
+      // Vérifier si la session n'a pas expiré
+      const lastActivity = session.lastActivity || 0;
+      const now = Date.now();
+      if(now - lastActivity < INACTIVITY_MS) {
+        // Session valide → restaurer
+        if(session.isAdmin) {
+          setScreen("admin");
+        } else if(session.user) {
+          setCurUser(session.user);
+          setScreen("user");
+        }
+        // Recharger les données
+        fetch(`${API}/api/series`,{headers:authH()})
+          .then(r=>r.json()).then(d=>{if(Array.isArray(d)&&d.length>0)setSeries(d);}).catch(()=>{});
+        if(session.isAdmin) {
+          fetch(`${API}/api/users`,{headers:authH()})
+            .then(r=>r.json()).then(d=>{if(Array.isArray(d))setUsers(d);}).catch(()=>{});
+        }
+        resetInactivityTimer();
+      } else {
+        // Session expirée → nettoyer
+        logout();
+      }
+    } else {
+      // Pas de session → charger les séries publiques
+      fetch(`${API}/api/series`,{headers:authH()})
+        .then(r=>r.json()).then(d=>{if(Array.isArray(d)&&d.length>0)setSeries(d);}).catch(()=>{});
+    }
+  }, []);
+
+  // Écouter les événements d'activité pour reset le timer
+  useEffect(() => {
+    const events = ["mousedown","mousemove","keydown","touchstart","scroll","click"];
+    const handleActivity = () => {
+      const session = LS.get("pc_session", null);
+      if(session) {
+        LS.set("pc_session", {...session, lastActivity: Date.now()});
+        resetInactivityTimer();
+      }
+    };
+    events.forEach(e => window.addEventListener(e, handleActivity, {passive:true}));
+    return () => events.forEach(e => window.removeEventListener(e, handleActivity));
+  }, [resetInactivityTimer]);
+
+  // Sauvegarder la session quand l'user se connecte
+  const loginUser = useCallback((u) => {
+    setCurUser(u);
+    setScreen("user");
+    LS.set("pc_session", {user:u, isAdmin:false, lastActivity:Date.now()});
+    resetInactivityTimer();
+  }, [resetInactivityTimer]);
+
+  const loginAdmin = useCallback(() => {
+    setScreen("admin");
+    LS.set("pc_session", {user:null, isAdmin:true, lastActivity:Date.now()});
+    resetInactivityTimer();
+  }, [resetInactivityTimer]);
+
+  const logoutUser = useCallback(() => {
+    clearTimeout(inactivityTimer.current);
+    logout();
+  }, [logout]);
 
   return (
     <>
       <style>{CSS}</style>
       {screen==="landing"  && <LandingPage  onLogin={()=>setScreen("login")} onRegister={()=>setScreen("register")} siteConfig={siteConfig} packs={packs} avantages={avantages} testimonials={testimonials} registerSuccess={registerSuccess} onCloseSuccess={()=>setRegisterSuccess(false)}/>}
-      {screen==="login"    && <LoginPage    users={users} onSuccess={u=>{setCurUser(u);setScreen("user");}} onAdminLogin={()=>setScreen("admin")} onRegister={()=>setScreen("register")}/>}
+      {screen==="login"    && <LoginPage    users={users} onSuccess={loginUser} onAdminLogin={loginAdmin} onRegister={()=>setScreen("register")}/>}
       {screen==="register" && <RegisterPage users={users} setUsers={setUsers} onSuccess={()=>{setRegisterSuccess(true);setScreen("landing");}} onLogin={()=>setScreen("login")}/>}
-      {screen==="user"     && curUser && <UserDashboard user={curUser} series={series} setSeries={setSeries} setUsers={setUsers} onLogout={()=>{setCurUser(null);setScreen("landing");}}/>}
-      {screen==="admin"    && <AdminPanel   users={users} setUsers={setUsers} series={series} setSeries={setSeries} siteConfig={siteConfig} setSiteConfig={setSiteConfig} packs={packs} setPacks={setPacks} avantages={avantages} setAvantages={setAvantages} testimonials={testimonials} setTestimonials={setTestimonials} onLogout={()=>setScreen("landing")}/>}
+      {screen==="user"     && curUser && <UserDashboard user={curUser} series={series} setSeries={setSeries} setUsers={setUsers} onLogout={logoutUser}/>}
+      {screen==="admin"    && <AdminPanel   users={users} setUsers={setUsers} series={series} setSeries={setSeries} siteConfig={siteConfig} setSiteConfig={setSiteConfig} packs={packs} setPacks={setPacks} avantages={avantages} setAvantages={setAvantages} testimonials={testimonials} setTestimonials={setTestimonials} onLogout={logoutUser}/>}
     </>
   );
 }
