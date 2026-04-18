@@ -1813,6 +1813,7 @@ function GenerateurCV({user, isPremium}) {
 
         <S label="Résumé professionnel">
           <textarea style={{...inp,minHeight:90,resize:"vertical"}} value={form.resume} onChange={e=>upd("resume",e.target.value)} placeholder="Décrivez votre profil professionnel, vos années d'expérience et votre objectif de carrière au Canada..."/>
+          <div style={{fontSize:10,color:GRAY,marginTop:4}}><em>Laisser vide si vous préférez ne pas inclure de résumé</em></div>
         </S>
 
         <S label="Expériences professionnelles">
@@ -1860,6 +1861,7 @@ function GenerateurCV({user, isPremium}) {
             </div>
           ))}
           <button onClick={()=>addArr("experiences",{poste:"",entreprise:"",lieu:"",debutMois:"",debutAnnee:"",finMois:"",finAnnee:"",taches:[""]})} className="btn btn-o btn-sm">+ Ajouter une expérience</button>
+          <div style={{fontSize:10,color:GRAY,marginTop:6}}><em>Les expériences sans poste ni entreprise ne seront pas incluses dans le CV</em></div>
         </S>
 
         <S label="Formation & Éducation">
@@ -1884,16 +1886,17 @@ function GenerateurCV({user, isPremium}) {
             </div>
           ))}
           <button onClick={()=>addArr("formations",{diplome:"",etablissement:"",lieu:"",mois:"",annee:""})} className="btn btn-o btn-sm">+ Ajouter une formation</button>
+          <div style={{fontSize:10,color:GRAY,marginTop:6}}><em>Les formations sans diplôme ne seront pas incluses dans le CV</em></div>
         </S>
 
         <S label="Certifications & Formation continue">
           <textarea style={{...inp,minHeight:100,resize:"vertical"}} value={form.certifications} onChange={e=>upd("certifications",e.target.value)} placeholder={"Titre de la certification – Organisme – MM/AAAA\nTitre de la certification – Organisme – MM/AAAA\n..."}/>
-          <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une certification par ligne — elles seront listées avec • dans le CV</div>
+          <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une certification par ligne — elles seront listées avec • dans le CV &nbsp;·&nbsp; <em>Laisser vide si non applicable</em></div>
         </S>
 
         <S label="Compétences">
           <textarea style={{...inp,minHeight:80,resize:"vertical"}} value={form.competences} onChange={e=>upd("competences",e.target.value)} placeholder={"Votre compétence 1\nVotre compétence 2\nVotre compétence 3\n..."}/>
-          <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une compétence par ligne</div>
+          <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une compétence par ligne &nbsp;·&nbsp; <em>Laisser vide si non applicable</em></div>
         </S>
 
         <S label="Langues">
@@ -1905,10 +1908,12 @@ function GenerateurCV({user, isPremium}) {
             </div>
           ))}
           <button onClick={()=>addArr("langues",{langue:"",niveau:""})} className="btn btn-o btn-sm">+ Ajouter une langue</button>
+          <div style={{fontSize:10,color:GRAY,marginTop:6}}><em>Les langues sans nom ne seront pas incluses dans le CV</em></div>
         </S>
 
         <S label="Références">
           <input style={inp} value={form.references} onChange={e=>upd("references",e.target.value)} placeholder="Disponible sur demande / Available upon request"/>
+          <div style={{fontSize:10,color:GRAY,marginTop:4}}><em>Laisser vide pour afficher "Disponible sur demande" automatiquement</em></div>
         </S>
 
         <div style={{display:"flex",justifyContent:"center",gap:12,paddingTop:16,flexWrap:"wrap"}}>
