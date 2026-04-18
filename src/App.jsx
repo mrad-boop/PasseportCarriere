@@ -343,6 +343,15 @@ const LANDING_CSS = `
 // CV QUOTAS PAR RANG
 // ═══════════════════════════════════════════════════════════════
 const CV_QUOTAS = { free:0, bronze:3, silver:10, gold:30, premium:30 };
+
+// Formater secondes → "Xh Ym" ou "Y min" ou "< 1 min"
+const formatTime = (sec) => {
+  if (!sec || sec < 60) return sec > 0 ? "< 1 min" : "—";
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return `${h}h ${m > 0 ? m+"m" : ""}`.trim();
+  return `${m} min`;
+};
 const RANK_LABELS = {
   free:   {label:"Free",   color:"#6b7280", bg:"rgba(107,114,128,0.1)"},
   bronze: {label:"Bronze", color:"#cd7f32", bg:"rgba(205,127,50,0.12)"},
@@ -1995,6 +2004,17 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   const [attempts,setAttempts]       = useState({});
   const [showPayment,setShowPayment] = useState(false);
   const isPremium = user.plan==="premium";
+
+  // Ping toutes les 60s pour tracker le temps de session
+  useEffect(()=>{
+    const ping = setInterval(()=>{
+      apiPost("/api/users/session/ping",{}).catch(()=>{});
+    }, 60000);
+    // Ping au fermeture de l'onglet
+    const handleUnload = () => { apiPost("/api/users/session/end",{}).catch(()=>{}); };
+    window.addEventListener("beforeunload", handleUnload);
+    return ()=>{ clearInterval(ping); window.removeEventListener("beforeunload", handleUnload); };
+  },[]);
   const initials  = user.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase();
   const pays      = getPays(user.pays);
 
@@ -2743,6 +2763,9 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
   const [tab,  setTab]   = useState("dashboard");
   const [modal,setModal] = useState(null);
   const [search,setSearch]=useState("");
+  const [filterPlan,setFilterPlan]=useState("all");
+  const [filterRank,setFilterRank]=useState("all");
+  const [filterStatus,setFilterStatus]=useState("all");
   const [toast,showToast]=useToast();
   const [addUserModal,setAddUserModal]=useState(false);
   const [newUser,setNewUser]=useState({nom:"",email:"",password:"",plan:"free",rank:"free"});
@@ -2952,12 +2975,68 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
         {/* USERS */}
         {tab==="users"&&(
           <div style={{padding:"24px 16px"}}>
-            <div className="fu" style={{marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+            <div className="fu" style={{marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
               <div>
                 <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:DARK,marginBottom:2}}>Utilisateurs</h1>
                 <p style={{fontSize:12,color:GRAY}}>{users.length} comptes enregistrés</p>
               </div>
-              <button className="btn btn-p btn-sm" onClick={()=>setAddUserModal(true)}>+ Ajouter un utilisateur</button>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <button className="btn btn-p btn-sm" onClick={()=>setAddUserModal(true)}>+ Ajouter</button>
+                <button className="btn btn-o btn-sm" onClick={()=>{
+                  const loadXLSX = (cb) => {
+                    if(window.XLSX){ cb(); return; }
+                    const s=document.createElement("script");
+                    s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+                    s.onload=cb; document.head.appendChild(s);
+                  };
+                  loadXLSX(()=>{
+                    const filtered=users.filter(u=>{
+                      const q=search.toLowerCase();
+                      return (!q||u.nom?.toLowerCase().includes(q)||u.email?.toLowerCase().includes(q))
+                        &&(filterPlan==="all"||u.plan===filterPlan)
+                        &&(filterRank==="all"||(u.rank||"free")===filterRank)
+                        &&(filterStatus==="all"||u.status===filterStatus);
+                    });
+                    const data=filtered.map(u=>({
+                      "Nom":u.nom||"",
+                      "Email":u.email||"",
+                      "Pays":u.pays||"",
+                      "Plan":u.plan||"free",
+                      "Rang":u.rank||"free",
+                      "Statut":u.status||"",
+                      "Inscription":u.joined||"",
+                      "Dernière connexion (Tunisie)":u.last_login||"—",
+                      "Temps sur plateforme":formatTime(u.total_time),
+                      "CV générés":u.cv_count||0,
+                    }));
+                    const ws=window.XLSX.utils.json_to_sheet(data);
+                    ws["!cols"]=[22,28,10,10,10,10,20,26,18,12].map(w=>({wch:w}));
+                    const wb=window.XLSX.utils.book_new();
+                    window.XLSX.utils.book_append_sheet(wb,ws,"Utilisateurs");
+                    window.XLSX.writeFile(wb,`passeport-carriere-users-${new Date().toISOString().slice(0,10)}.xlsx`);
+                  });
+                }}>📊 Exporter Excel</button>
+              </div>
+            </div>
+
+            {/* Barre de filtres */}
+            <div style={{background:"#fff",border:`1px solid ${BORDER}`,borderRadius:10,padding:"10px 14px",marginBottom:12,display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,flex:"1 1 180px"}}>
+                <span style={{color:GRAY,fontSize:13}}>🔍</span>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nom ou email…" style={{flex:1,border:"none",outline:"none",fontSize:12,fontFamily:"'DM Sans',sans-serif",color:DARK,background:"transparent"}}/>
+              </div>
+              {[
+                {val:filterPlan, set:setFilterPlan, opts:[["all","Tous plans"],["free","Free"],["premium","Premium"]]},
+                {val:filterRank, set:setFilterRank, opts:[["all","Tous rangs"],["free","🔓 Free"],["bronze","🥉 Bronze"],["silver","🥈 Silver"],["gold","🥇 Gold"]]},
+                {val:filterStatus, set:setFilterStatus, opts:[["all","Tous statuts"],["actif","✅ Actif"],["suspendu","🚫 Suspendu"]]},
+              ].map((f,i)=>(
+                <select key={i} value={f.val} onChange={e=>f.set(e.target.value)} style={{padding:"5px 8px",border:`1px solid ${BORDER}`,borderRadius:7,fontSize:11,outline:"none",background:"#fff",fontFamily:"'DM Sans',sans-serif"}}>
+                  {f.opts.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+                </select>
+              ))}
+              {(filterPlan!=="all"||filterRank!=="all"||filterStatus!=="all"||search)&&(
+                <button onClick={()=>{setSearch("");setFilterPlan("all");setFilterRank("all");setFilterStatus("all");}} style={{fontSize:11,color:GRAY,background:"none",border:"none",cursor:"pointer",padding:"4px 6px",fontFamily:"'DM Sans',sans-serif"}}>✕ Reset</button>
+              )}
             </div>
 
             {/* Modal ajout utilisateur */}
@@ -3013,52 +3092,57 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher par nom ou email…" style={{flex:1,border:"none",outline:"none",fontSize:13,fontFamily:"'DM Sans',sans-serif",color:DARK,background:"transparent"}}/>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {users.filter(u=>u.nom.toLowerCase().includes(search.toLowerCase())||u.email.toLowerCase().includes(search.toLowerCase())).map(u=>{
+              {users.filter(u=>{
+                const q=search.toLowerCase();
+                const ms=!q||u.nom?.toLowerCase().includes(q)||u.email?.toLowerCase().includes(q);
+                const mp=filterPlan==="all"||u.plan===filterPlan;
+                const mr=filterRank==="all"||(u.rank||"free")===filterRank;
+                const mt=filterStatus==="all"||u.status===filterStatus;
+                return ms&&mp&&mr&&mt;
+              }).map(u=>{
                 const p=getPays(u.pays);
                 const isAdmin = u.email==="admin@launchpad.ca" || u.role==="admin";
                 return(
-                  <div key={u.id} style={{background:"#fff",border:`1.5px solid ${u.status==="suspendu"?"rgba(220,38,38,0.2)":BORDER}`,borderRadius:11,padding:"13px 16px",display:"flex",alignItems:"center",gap:12}}>
-                    <div style={{width:34,height:34,borderRadius:"50%",background:isAdmin?"#1a3a8f":u.plan==="premium"?G:GS,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:12,flexShrink:0}}>{u.nom.charAt(0)}</div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
-                        <span style={{fontSize:13,fontWeight:700,color:DARK}}>{u.nom}</span>
-                        {isAdmin&&<span className="tag" style={{background:"rgba(26,58,143,0.1)",color:BLUE,fontSize:9}}>🛡 Admin</span>}
-                        <span className="tag" style={{background:u.plan==="premium"?G:"rgba(90,101,119,0.1)",color:u.plan==="premium"?"#fff":GRAY,fontSize:9}}>{u.plan==="premium"?"⭐ Premium":"Free"}</span>
-                        {u.rank&&u.rank!=="free"&&(
-                          <span className="tag" style={{background:RANK_LABELS[u.rank]?.bg||"rgba(107,114,128,0.1)",color:RANK_LABELS[u.rank]?.color||GRAY,fontSize:9,border:`1px solid ${RANK_LABELS[u.rank]?.color||GRAY}44`}}>
-                            {u.rank==="bronze"?"🥉":u.rank==="silver"?"🥈":"🥇"} {RANK_LABELS[u.rank]?.label}
-                          </span>
-                        )}
-                        <span className="tag" style={{background:u.status==="actif"?"rgba(5,150,105,0.09)":"rgba(220,38,38,0.09)",color:u.status==="actif"?"#059669":"#dc2626",fontSize:9}}>{u.status}</span>
-                      </div>
-                      <div style={{fontSize:11,color:GRAY}}>✉ {u.email} · {p.flag} {p.name} · {u.joined}</div>
-                    </div>
-                    {isAdmin ? (
-                      /* Compte admin — lecture seule, juste badge */
-                      <span style={{fontSize:11,color:BLUE,fontWeight:600,padding:"4px 10px",border:`1px solid ${BLUE}33`,borderRadius:7,background:"rgba(26,58,143,0.05)"}}>🔒 Protégé</span>
-                    ) : (
-                      <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                        <select value={u.plan} onChange={e=>updateUser(u.id,{plan:e.target.value,rank:u.rank||"free",status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
-                          <option value="free">Free</option>
-                          <option value="premium">Premium ⭐</option>
-                        </select>
-                        <select value={u.rank||"free"} onChange={e=>updateUser(u.id,{plan:u.plan,rank:e.target.value,status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
-                          <option value="free">🔓 Free</option>
-                          <option value="bronze">🥉 Bronze</option>
-                          <option value="silver">🥈 Silver</option>
-                          <option value="gold">🥇 Gold</option>
-                        </select>
-                        <select value={u.status} onChange={e=>updateUser(u.id,{plan:u.plan,rank:u.rank||"free",status:e.target.value})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
-                          <option value="actif">✅ Actif</option>
-                          <option value="suspendu">🚫 Suspendu</option>
-                        </select>
-                        <div style={{fontSize:10,color:GRAY,minWidth:50,textAlign:"center"}}>
-                          <div style={{fontWeight:700,color:DARK}}>{u.cv_count||0}</div>
-                          <div>CV gén.</div>
+                  <div key={u.id} style={{background:"#fff",border:`1.5px solid ${u.status==="suspendu"?"rgba(220,38,38,0.2)":BORDER}`,borderRadius:11,padding:"13px 16px"}}>
+                    <div style={{display:"flex",alignItems:"flex-start",gap:12,flexWrap:"wrap"}}>
+                      <div style={{width:36,height:36,borderRadius:"50%",background:isAdmin?"#1a3a8f":u.plan==="premium"?G:GS,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,flexShrink:0}}>{u.nom?.charAt(0)||"?"}</div>
+                      <div style={{flex:1,minWidth:200}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3,flexWrap:"wrap"}}>
+                          <span style={{fontSize:13,fontWeight:700,color:DARK}}>{u.nom}</span>
+                          {isAdmin&&<span className="tag" style={{background:"rgba(26,58,143,0.1)",color:BLUE,fontSize:9}}>🛡 Admin</span>}
+                          <span className="tag" style={{background:u.plan==="premium"?G:"rgba(90,101,119,0.1)",color:u.plan==="premium"?"#fff":GRAY,fontSize:9}}>{u.plan==="premium"?"⭐ Premium":"Free"}</span>
+                          {u.rank&&u.rank!=="free"&&<span className="tag" style={{background:RANK_LABELS[u.rank]?.bg,color:RANK_LABELS[u.rank]?.color,fontSize:9}}>{u.rank==="bronze"?"🥉":u.rank==="silver"?"🥈":"🥇"} {RANK_LABELS[u.rank]?.label}</span>}
+                          <span className="tag" style={{background:u.status==="actif"?"rgba(5,150,105,0.09)":"rgba(220,38,38,0.09)",color:u.status==="actif"?"#059669":"#dc2626",fontSize:9}}>{u.status}</span>
                         </div>
-                        <button onClick={()=>deleteUser(u.id)} style={{padding:"4px 8px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
+                        <div style={{fontSize:11,color:GRAY,marginBottom:5}}>✉ {u.email} · {p.flag} {p.name}</div>
+                        <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+                          <span style={{fontSize:10,color:GRAY}}>🕐 <strong style={{color:DARK}}>{formatTime(u.total_time)}</strong> sur la plateforme</span>
+                          <span style={{fontSize:10,color:GRAY}}>🔑 <strong style={{color:DARK}}>{u.last_login||"—"}</strong></span>
+                          {u.cv_count>0&&<span style={{fontSize:10,color:GRAY}}>📄 <strong style={{color:DARK}}>{u.cv_count}</strong> CV</span>}
+                        </div>
                       </div>
-                    )}
+                      {isAdmin ? (
+                        <span style={{fontSize:11,color:BLUE,fontWeight:600,padding:"4px 10px",border:`1px solid ${BLUE}33`,borderRadius:7,background:"rgba(26,58,143,0.05)",alignSelf:"center"}}>🔒 Protégé</span>
+                      ) : (
+                        <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap",justifyContent:"flex-end"}}>
+                          <select value={u.plan} onChange={e=>updateUser(u.id,{plan:e.target.value,rank:u.rank||"free",status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                            <option value="free">Free</option>
+                            <option value="premium">Premium ⭐</option>
+                          </select>
+                          <select value={u.rank||"free"} onChange={e=>updateUser(u.id,{plan:u.plan,rank:e.target.value,status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                            <option value="free">🔓 Free</option>
+                            <option value="bronze">🥉 Bronze</option>
+                            <option value="silver">🥈 Silver</option>
+                            <option value="gold">🥇 Gold</option>
+                          </select>
+                          <select value={u.status} onChange={e=>updateUser(u.id,{plan:u.plan,rank:u.rank||"free",status:e.target.value})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                            <option value="actif">✅ Actif</option>
+                            <option value="suspendu">🚫 Suspendu</option>
+                          </select>
+                          <button onClick={()=>deleteUser(u.id)} style={{padding:"4px 8px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -3294,6 +3378,8 @@ export default function App() {
     setScreen("user");
     LS.set("pc_session", {user:u, isAdmin:false, lastActivity:Date.now()});
     resetInactivityTimer();
+    // Démarrer le tracking de session
+    apiPost("/api/users/session/start", {}).catch(()=>{});
   }, [resetInactivityTimer]);
 
   const loginAdmin = useCallback(() => {
@@ -3304,7 +3390,8 @@ export default function App() {
 
   const logoutUser = useCallback(() => {
     clearTimeout(inactivityTimer.current);
-    logout();
+    // Terminer le tracking de session avant logout
+    apiPost("/api/users/session/end", {}).catch(()=>{}).finally(()=>logout());
   }, [logout]);
 
   return (
