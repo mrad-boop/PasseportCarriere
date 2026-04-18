@@ -1349,14 +1349,67 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
           </button>
         </div>
       </div>
+      {/* MODAL PAIEMENT */}
+      {showPayment&&<PaymentModal onClose={()=>setShowPayment(false)} onRegister={()=>setShowPayment(false)}/>}
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   PROFIL TAB — Editable
+/* ═══ PAYMENT MODAL ═══ */
+function PaymentModal({onClose}) {
+  const [selectedPack,setSelectedPack] = useState(null);
+  const [showCS,setShowCS] = useState(false);
+  const PACKS_PAY = [
+    {id:"bronze",name:"Bronze",price:"14.99",color:"#cd7f32",colorDark:"#a0522d",cv:3,acces:"7 Jours",features:["40 tests CE","40 tests CO","Expression Orale","Expression Écrite","Version 2026"],bonus:"3 générations CV"},
+    {id:"silver",name:"Silver",price:"24.99",color:"#607080",colorDark:"#4a5a6a",cv:10,acces:"15 Jours",features:["40 tests CE","40 tests CO","Expression Orale","Expression Écrite","Version 2026"],bonus:"10 générations CV",highlight:true},
+    {id:"gold",  name:"Gold",  price:"39.99",color:"#c8a227",colorDark:"#9a7b0a",cv:30,acces:"30 Jours",features:["40 tests CE","40 tests CO","Expression Orale","Expression Écrite","Version 2026"],bonus:"30 générations CV"},
+  ];
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(6,13,31,0.85)",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,overflowY:"auto"}}>
+      <div style={{width:"100%",maxWidth:860,fontFamily:"'DM Sans',sans-serif"}}>
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:900,color:"#fff",marginBottom:6}}>Choisissez votre <span style={{background:G,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Pack</span></h2>
+          <p style={{fontSize:13,color:"rgba(255,255,255,0.5)"}}>Sélectionnez un pack puis procédez au paiement</p>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,marginBottom:20}}>
+          {PACKS_PAY.map(p=>(
+            <div key={p.id} onClick={()=>setSelectedPack(p.id)} style={{background:selectedPack===p.id?"rgba(45,91,227,0.15)":"rgba(255,255,255,0.04)",border:`2px solid ${selectedPack===p.id?BLUE:p.highlight?"rgba(255,255,255,0.15)":"rgba(255,255,255,0.08)"}`,borderRadius:14,padding:22,cursor:"pointer",transition:"all .18s",position:"relative"}}>
+              {p.highlight&&<div style={{position:"absolute",top:0,right:0,background:"#2d5be3",fontSize:9,fontWeight:900,padding:"4px 12px 4px 16px",borderRadius:"0 12px 0 14px",color:"#fff",letterSpacing:.6}}>POPULAIRE</div>}
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:900,color:p.color,marginBottom:8}}>{p.name}</div>
+              <div style={{display:"flex",alignItems:"baseline",gap:2,marginBottom:12}}>
+                <span style={{fontSize:13,color:"rgba(255,255,255,0.5)"}}>$</span>
+                <span style={{fontFamily:"'Playfair Display',serif",fontSize:32,fontWeight:900,color:"#fff"}}>{p.price.split(".")[0]}</span>
+                <span style={{fontSize:13,color:"rgba(255,255,255,0.4)"}}>{"."+(p.price.split(".")[1]||"99")}</span>
+              </div>
+              {p.features.map((f,i)=><div key={i} style={{fontSize:11,color:"rgba(255,255,255,0.6)",marginBottom:3}}>✓ {f}</div>)}
+              <div style={{marginTop:10,background:`${p.color}22`,border:`1px solid ${p.color}44`,borderRadius:7,padding:"6px 10px",fontSize:11,color:p.color,fontWeight:600}}>📄 {p.bonus} · 📅 Accès {p.acces}</div>
+              {selectedPack===p.id&&<div style={{marginTop:10,textAlign:"center",color:BLUE,fontSize:12,fontWeight:700}}>✅ Sélectionné</div>}
+            </div>
+          ))}
+        </div>
+        <div style={{display:"flex",gap:12,justifyContent:"center"}}>
+          <button className="btn btn-p" style={{padding:"12px 36px",fontSize:14}} onClick={()=>{ if(!selectedPack){alert("Veuillez sélectionner un pack.");return;} setShowCS(true); }}>
+            💳 Payer maintenant
+          </button>
+          <button className="btn btn-ghost" style={{padding:"12px 22px"}} onClick={onClose}>Annuler</button>
+        </div>
+      </div>
+      {/* Coming soon popup */}
+      {showCS&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(6,13,31,0.85)",zIndex:3000,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{background:"#fff",borderRadius:20,padding:40,textAlign:"center",maxWidth:380,width:"100%",boxShadow:"0 24px 64px rgba(0,0,0,0.4)"}}>
+            <div style={{fontSize:52,marginBottom:16}}>🚀</div>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:DARK,marginBottom:10}}>Paiement — Bientôt disponible</h3>
+            <p style={{fontSize:13,color:GRAY,lineHeight:1.7,marginBottom:20}}>Le système de paiement en ligne sera disponible très prochainement. Contactez-nous pour activer votre pack manuellement.</p>
+            <button className="btn btn-p" style={{width:"100%"}} onClick={()=>{ setShowCS(false); onClose(); }}>Compris !</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 ═══════════════════════════════════════════════════════════════ */
-function ProfilTab({user,isPremium,attempts,onUpdate}) {
+function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const [form,setForm]   = useState({
     nom:    user.nom||"",
     email:  user.email||"",
@@ -1390,7 +1443,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
   const paysInfo = getPays(form.pays);
   const initials = form.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase()||"?";
 
-  const F = ({label,k,type="text",placeholder}) => (
+  // Composant input local — nommé PF pour éviter conflit avec Field global
+  const PF = ({label,k,type="text",placeholder}) => (
     <div style={{marginBottom:14}}>
       <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
       <input className="inp" type={type} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={placeholder||label}/>
@@ -1416,7 +1470,6 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
       {/* Photo + plan */}
       <div className="card" style={{padding:24,marginBottom:14}}>
         <div style={{display:"flex",alignItems:"center",gap:18,marginBottom:22,paddingBottom:22,borderBottom:`1px solid ${BORDER}`}}>
-          {/* Photo */}
           <div style={{position:"relative",flexShrink:0}}>
             <div style={{width:72,height:72,borderRadius:"50%",overflow:"hidden",background:G,display:"flex",alignItems:"center",justifyContent:"center",border:`3px solid ${BORDER}`}}>
               {form.photo
@@ -1456,10 +1509,10 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
       <div className="card" style={{padding:24,marginBottom:14}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:16}}>Informations personnelles</h3>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <Field label="Nom et Prénom" k="nom" placeholder="Mourad Benali"/>
-          <Field label="Adresse email" k="email" type="email" placeholder="votre@email.com"/>
+          <PF label="Nom et Prénom" k="nom" placeholder="Votre nom complet"/>
+          <PF label="Adresse email" k="email" type="email" placeholder="votre@email.com"/>
         </div>
-        <Field label="Adresse / Ville" k="adresse" placeholder="123 Rue Principale, Montréal"/>
+        <PF label="Adresse / Ville" k="adresse" placeholder="Ville, Province, Canada"/>
         <div style={{marginBottom:14}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Pays de résidence</label>
           <select className="inp" value={form.pays} onChange={e=>upd("pays",e.target.value)}>
@@ -1467,8 +1520,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
           </select>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <Field label="Téléphone" k="tel" placeholder="+1 514 000-0000"/>
-          <Field label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000"/>
+          <PF label="Téléphone" k="tel" placeholder="+1 514 000-0000"/>
+          <PF label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000"/>
         </div>
       </div>
 
@@ -1485,11 +1538,12 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
 
       {/* Upgrade */}
       {!isPremium&&(
-        <div style={{background:G,borderRadius:14,padding:"24px 26px"}}>
-          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:900,color:"#fff",marginBottom:4}}>Passez à Premium</h3>
-          <p style={{fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.7,marginBottom:16}}>80 séries débloquées · Refaire à tout moment · Modules CV et Emploi à venir</p>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:900,color:"#fff",marginBottom:14}}>30 $ <span style={{fontSize:13,fontWeight:400,opacity:.7}}>/ mois</span></div>
-          <button className="btn" style={{background:"#fff",color:BLUE,fontWeight:700}}>Souscrire →</button>
+        <div style={{background:G,borderRadius:14,padding:"24px 26px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:14}}>
+          <div>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:900,color:"#fff",marginBottom:4}}>Passez à Premium</h3>
+            <p style={{fontSize:13,color:"rgba(255,255,255,0.7)",lineHeight:1.6}}>Toutes les séries débloquées · Générateur CV · Accès prioritaire</p>
+          </div>
+          <button className="btn" style={{background:"#fff",color:BLUE,fontWeight:700,padding:"11px 24px"}} onClick={onUpgrade}>Upgrader ⭐</button>
         </div>
       )}
 
@@ -1934,6 +1988,7 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   const [activeSerie,setActiveSerie] = useState(null);
   const [examType,setExamType]       = useState(null);
   const [attempts,setAttempts]       = useState({});
+  const [showPayment,setShowPayment] = useState(false);
   const isPremium = user.plan==="premium";
   const initials  = user.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase();
   const pays      = getPays(user.pays);
@@ -2114,10 +2169,10 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
             {!isPremium&&(
               <div style={{background:G,borderRadius:14,padding:"22px 26px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:14}}>
                 <div>
-                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:900,color:"#fff",marginBottom:4}}>Passez Premium — 30 $ / mois</div>
-                  <p style={{fontSize:12,color:"rgba(255,255,255,0.7)"}}>Toutes les séries débloquées · Refaire illimité · Accès à venir CV & Emploi</p>
+                  <div style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:900,color:"#fff",marginBottom:4}}>Passez à Premium</div>
+                  <p style={{fontSize:12,color:"rgba(255,255,255,0.7)"}}>Toutes les séries débloquées · Générateur CV · Accès prioritaire</p>
                 </div>
-                <button className="btn" onClick={()=>setTab("profil")} style={{background:"#fff",color:BLUE,fontSize:12,fontWeight:700,padding:"9px 18px",whiteSpace:"nowrap"}}>Upgrader ⭐</button>
+                <button className="btn" onClick={()=>setShowPayment(true)} style={{background:"#fff",color:BLUE,fontSize:12,fontWeight:700,padding:"9px 18px",whiteSpace:"nowrap"}}>Upgrader ⭐</button>
               </div>
             )}
           </div>
@@ -2160,7 +2215,7 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
 
         {/* Profil — Editable */}
         {tab==="profil"&&(
-          <ProfilTab user={user} isPremium={isPremium} attempts={attempts} onUpdate={updatedUser=>{
+          <ProfilTab user={user} isPremium={isPremium} attempts={attempts} onUpgrade={()=>setShowPayment(true)} onUpdate={updatedUser=>{
             apiPut("/api/users/me", updatedUser).then(()=>{
               setUsers(prev=>prev.map(u=>u.id===updatedUser.id?updatedUser:u));
             });
