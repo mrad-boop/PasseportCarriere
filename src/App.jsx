@@ -340,46 +340,46 @@ const LANDING_CSS = `
 
 
 // ═══════════════════════════════════════════════════════════════
+// CV QUOTAS PAR RANG
+// ═══════════════════════════════════════════════════════════════
+const CV_QUOTAS = { free:0, bronze:3, silver:10, gold:30, premium:30 };
+const RANK_LABELS = {
+  free:   {label:"Free",   color:"#6b7280", bg:"rgba(107,114,128,0.1)"},
+  bronze: {label:"Bronze", color:"#cd7f32", bg:"rgba(205,127,50,0.12)"},
+  silver: {label:"Silver", color:"#607080", bg:"rgba(140,155,171,0.15)"},
+  gold:   {label:"Gold",   color:"#c8a227", bg:"rgba(200,162,39,0.12)"},
+  premium:{label:"Premium",color:"#2d5be3", bg:"rgba(45,91,227,0.1)"},
+};
+
+// ═══════════════════════════════════════════════════════════════
 // INITIAL PACKS & SITE CONFIG (stored in localStorage via admin)
 // ═══════════════════════════════════════════════════════════════
 const INIT_PACKS = [
   {
-    id:"bronze", name:"Bronze", price:"14.99", currency:"$", acces:"5 Jours",
+    id:"bronze", name:"Bronze", price:"14.99", currency:"$", acces:"7 Jours",
     color:"#cd7f32", colorDark:"#a0522d", ribbon:"Passeport Bronze", ribbonColor:"#cd7f32",
     features:[
-      "Compréhension Écrite : 40 tests d'entraînement (simulation réelle)",
-      "Compréhension Orale : 40 tests d'entraînement (simulation réelle)",
-      "Expression Orale : Sujets d'Actualité et Corrections",
-      "Expression Écrite : Sujets d'Actualité et Corrections",
-      "Version 2026 : Contenus conformes aux dernières mises à jour de l'examen",
+      "40 tests CE", "40 tests CO", "Expression Orale", "Expression Écrite", "Version 2026",
     ],
-    bonus:"Accès au simulateur d'expression écrite : 3 essais inclus",
+    bonus:"3 générations de CV incluses",
     highlight:false,
   },
   {
-    id:"silver", name:"Silver", price:"29.99", currency:"$", acces:"1 Mois",
-    color:"#8c9bab", colorDark:"#607080", ribbon:"Passeport Silver", ribbonColor:"#8c9bab",
+    id:"silver", name:"Silver", price:"24.99", currency:"$", acces:"15 Jours",
+    color:"#8c9bab", colorDark:"#607080", ribbon:"Passeport Silver", ribbonColor:"#607080",
     features:[
-      "Compréhension Écrite : 40 tests d'entraînement (simulation réelle)",
-      "Compréhension Orale : 40 tests d'entraînement (simulation réelle)",
-      "Expression Orale : Sujets d'Actualité et Corrections",
-      "Expression Écrite : Sujets d'Actualité et Corrections",
-      "Version 2026 : Contenus conformes aux dernières mises à jour de l'examen",
+      "40 tests CE", "40 tests CO", "Expression Orale", "Expression Écrite", "Version 2026",
     ],
-    bonus:"Accès au simulateur d'expression écrite : 8 essais inclus",
+    bonus:"10 générations de CV incluses",
     highlight:true,
   },
   {
-    id:"gold", name:"Gold", price:"49.99", currency:"$", acces:"2 Mois",
+    id:"gold", name:"Gold", price:"39.99", currency:"$", acces:"30 Jours",
     color:"#c8a227", colorDark:"#9a7b0a", ribbon:"Passeport Gold", ribbonColor:"#c8a227",
     features:[
-      "Compréhension Écrite : 40 tests d'entraînement (simulation réelle)",
-      "Compréhension Orale : 40 tests d'entraînement (simulation réelle)",
-      "Expression Orale : Sujets d'Actualité et Corrections",
-      "Expression Écrite : Sujets d'Actualité et Corrections",
-      "Version 2026 : Contenus conformes aux dernières mises à jour de l'examen",
+      "40 tests CE", "40 tests CO", "Expression Orale", "Expression Écrite", "Version 2026",
     ],
-    bonus:"Accès au simulateur d'expression écrite : 15 essais inclus",
+    bonus:"30 générations de CV incluses",
     highlight:false,
   },
 ];
@@ -709,8 +709,18 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
                 position:"relative",overflow:"hidden",
                 boxShadow:pack.highlight?"0 16px 48px rgba(26,58,143,0.22)":"none",
               }}>
-                {/* Ribbon diagonale */}
-                <div style={{position:"absolute",top:16,right:-28,width:120,height:28,background:pack.ribbonColor,transform:"rotate(35deg)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",letterSpacing:.5,zIndex:2,boxShadow:"0 2px 8px rgba(0,0,0,0.2)"}}>{pack.ribbon}</div>
+                {/* Ribbon badge — coin supérieur droit */}
+                <div style={{
+                  position:"absolute",top:0,right:0,
+                  background:pack.ribbonColor,
+                  color:"#fff",
+                  fontSize:10,fontWeight:900,letterSpacing:.8,
+                  padding:"6px 14px 6px 20px",
+                  borderRadius:"0 14px 0 18px",
+                  boxShadow:`-2px 2px 8px ${pack.ribbonColor}66`,
+                  zIndex:2,
+                  fontFamily:"'DM Sans',sans-serif",
+                }}>{pack.ribbon}</div>
 
                 {/* Header */}
                 <div style={{background:pack.highlight?`rgba(255,255,255,0.12)`:`${pack.color}15`,borderBottom:`1px solid ${pack.highlight?"rgba(255,255,255,0.15)":BORDER}`,padding:"22px 24px 18px",marginBottom:0}}>
@@ -860,10 +870,7 @@ function LoginPage({onSuccess,onAdminLogin,onRegister,users,successMsg}) {
         <div style={{textAlign:"center",marginBottom:30}}>
           <div style={{width:44,height:44,borderRadius:11,background:G,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:900,fontSize:16,fontFamily:"'Playfair Display',serif",margin:"0 auto 14px"}}>LP</div>
           <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:"#fff",marginBottom:4}}>Connexion</h2>
-          <p style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>LaunchPad TCF Canada</p>
-        </div>
-        <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 13px",marginBottom:18,fontSize:11,color:"rgba(255,255,255,0.45)"}}>
-          <strong style={{color:"rgba(255,255,255,0.6)"}}>Démo :</strong> mourad@email.com / Test1234! &nbsp;|&nbsp; Admin : admin@launchpad.ca / Admin2026!
+          <p style={{fontSize:12,color:"rgba(255,255,255,0.35)"}}>Passeport Carrière — TCF Canada</p>
         </div>
         {err&&<div style={{background:"rgba(220,38,38,0.1)",border:"1px solid rgba(220,38,38,0.25)",color:"#fca5a5",borderRadius:8,padding:"9px 13px",fontSize:12,marginBottom:14}}>{err}</div>}
         {[["Email","email","email",email,setEmail],["Mot de passe","password","password",pwd,setPwd]].map(([l,t,p,v,s])=>(
@@ -1466,6 +1473,387 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
 /* ═══════════════════════════════════════════════════════════════
    USER DASHBOARD
 ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   GÉNÉRATEUR DE CV — Modèle canadien bilingue + persistance DB
+═══════════════════════════════════════════════════════════════ */
+const CV_DEFAULT = {
+  prenom:"", nom:"", adresse:"", telephone:"", email:"", titre:"", resume:"",
+  experiences: [{ poste:"", entreprise:"", lieu:"", debut:"", fin:"", taches:[""] }],
+  formations:  [{ diplome:"", etablissement:"", lieu:"", annee:"" }],
+  competences:"", certifications:"",
+  langues: [{ langue:"", niveau:"" }],
+  references:"",
+};
+
+function GenerateurCV({user, isPremium}) {
+  const [form,     setForm]     = useState(CV_DEFAULT);
+  const [lang,     setLang]     = useState("fr");
+  const [color,    setColor]    = useState("#1a3a8f");
+  const [useColor, setUseColor] = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [saved,    setSaved]    = useState(false);
+  const [loading,  setLoading]  = useState(true);
+  const [cvCount,  setCvCount]  = useState(0);
+  const [quota,    setQuota]    = useState(0);
+  const [rank,     setRank]     = useState("free");
+  const saveTimer = useRef(null);
+
+  // ── Charger depuis le backend au montage ──
+  useEffect(()=>{
+    setLoading(true);
+    apiGet("/api/cv").then(data=>{
+      if(data && typeof data==="object"){
+        setForm(f=>({...CV_DEFAULT, ...f,
+          prenom: data.prenom || user?.nom?.split(" ")[0] || "",
+          nom:    data.nom    || user?.nom?.split(" ").slice(1).join(" ") || "",
+          email:  data.email  || user?.email || "",
+          ...data,
+        }));
+        if(data.cvLang)     setLang(data.cvLang);
+        if(data.cvColor)    setColor(data.cvColor);
+        if(data.cvUseColor) setUseColor(data.cvUseColor);
+        setCvCount(data.cv_count || 0);
+        setQuota(data.quota  || 0);
+        setRank(data.rank    || "free");
+      } else {
+        setForm(f=>({...f,
+          prenom: user?.nom?.split(" ")[0] || "",
+          nom:    user?.nom?.split(" ").slice(1).join(" ") || "",
+          email:  user?.email || "",
+        }));
+        // Charger quota séparément
+        apiGet("/api/cv/quota").then(q=>{
+          if(q){ setCvCount(q.cv_count||0); setQuota(q.quota||0); setRank(q.rank||"free"); }
+        });
+      }
+      setLoading(false);
+    });
+  },[]);
+
+  // ── Auto-save : 2s après la dernière modification ──
+  const triggerSave = (newForm, newLang=lang, newColor=color, newUseColor=useColor) => {
+    clearTimeout(saveTimer.current);
+    setSaved(false);
+    saveTimer.current = setTimeout(async ()=>{
+      setSaving(true);
+      await apiPost("/api/cv/save", {
+        ...newForm, cvLang: newLang, cvColor: newColor, cvUseColor: newUseColor,
+      });
+      setSaving(false);
+      setSaved(true);
+      setTimeout(()=>setSaved(false), 2500);
+    }, 1500);
+  };
+
+  const upd = (k,v) => {
+    const n = {...form,[k]:v};
+    setForm(n);
+    triggerSave(n);
+  };
+  const updArr = (arr,i,k,v) => {
+    const cp=[...form[arr]]; cp[i]={...cp[i],[k]:v};
+    const n={...form,[arr]:cp}; setForm(n); triggerSave(n);
+  };
+  const addArr = (arr,tmpl) => {
+    const n={...form,[arr]:[...form[arr],tmpl]}; setForm(n); triggerSave(n);
+  };
+  const delArr = (arr,i) => {
+    const n={...form,[arr]:form[arr].filter((_,idx)=>idx!==i)}; setForm(n); triggerSave(n);
+  };
+  const updTache = (ei,ti,v) => {
+    const cp=[...form.experiences];
+    cp[ei]={...cp[ei],taches:cp[ei].taches.map((t,x)=>x===ti?v:t)};
+    const n={...form,experiences:cp}; setForm(n); triggerSave(n);
+  };
+  const changeLang = v  => { setLang(v);     triggerSave(form,v,color,useColor); };
+  const changeColor= v  => { setColor(v);    triggerSave(form,lang,v,useColor); };
+  const changeUseC = v  => { setUseColor(v); triggerSave(form,lang,color,v); };
+
+  const T = {
+    fr:{ resume:"RÉSUMÉ PROFESSIONNEL", exp:"EXPÉRIENCES PROFESSIONNELLES", form:"FORMATION & ÉDUCATION", comp:"COMPÉTENCES", lang:"LANGUES", cert:"FORMATION CONTINUE & CERTIFICATIONS", ref:"RÉFÉRENCES", present:"Disponible sur demande" },
+    en:{ resume:"PROFESSIONAL SUMMARY", exp:"WORK EXPERIENCE", form:"EDUCATION", comp:"SKILLS", lang:"LANGUAGES", cert:"CERTIFICATIONS & TRAINING", ref:"REFERENCES", present:"Available upon request" },
+  };
+
+  const _ts = (c) => `font-size:10.5px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:${useColor?c:"#000"};border-bottom:1.5px solid ${useColor?c:"#000"};padding-bottom:3px;margin-top:14px;margin-bottom:6px;display:block;`;
+
+  const buildCVBlock = (lg) => {
+    const t = T[lg];
+    const c = color;
+    return `
+      <div style="font-family:Arial,sans-serif;color:#000;font-size:11px;line-height:1.6;max-width:720px;margin:0 auto;padding:36px 44px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:19px;font-weight:900;letter-spacing:1.5px;">${(form.prenom+" "+form.nom).toUpperCase()}</div>
+          ${form.titre?`<div style="font-size:11.5px;color:#333;margin-top:4px;font-style:italic;">${form.titre}</div>`:""}
+          <div style="font-size:10px;margin-top:5px;color:#222;">${[form.adresse,form.telephone,form.email].filter(Boolean).join("  |  ")}</div>
+        </div>
+        <div style="border-top:2px solid ${useColor?c:"#000"};margin-bottom:12px;"></div>
+
+        ${form.resume?`<span style="${_ts(c)}">${t.resume}</span><div style="font-size:10.5px;margin-bottom:8px;">${form.resume.replace(/\n/g,"<br/>")}</div>`:""}
+
+        ${form.experiences.filter(e=>e.poste||e.entreprise).length?`
+        <span style="${_ts(c)}">${t.exp}</span>
+        ${form.experiences.map(e=>`
+          <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span style="font-weight:700;font-size:11px;">${e.poste}</span>
+              <span style="font-size:10px;color:#444;">${e.debut}${e.fin?" — "+e.fin:""}</span>
+            </div>
+            <div style="font-size:10px;font-style:italic;margin-bottom:2px;">${e.entreprise}${e.lieu?", "+e.lieu:""}</div>
+            <ul style="margin:2px 0 0 0;padding-left:16px;">${e.taches.filter(Boolean).map(ta=>`<li style="margin-bottom:1px;">${ta}</li>`).join("")}</ul>
+          </div>`).join("")}`:""}
+
+        ${form.formations.filter(f=>f.diplome).length?`
+        <span style="${_ts(c)}">${t.form}</span>
+        ${form.formations.map(f=>`
+          <div style="margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <span style="font-weight:700;font-size:11px;">${f.diplome}</span>
+              <span style="font-size:10px;color:#444;">${f.annee}</span>
+            </div>
+            <div style="font-size:10px;font-style:italic;">${f.etablissement}${f.lieu?", "+f.lieu:""}</div>
+          </div>`).join("")}`:""}
+
+        ${form.certifications?`<span style="${_ts(c)}">${t.cert}</span><div style="font-size:10.5px;">${form.certifications.split("\n").filter(Boolean).map(l=>`<div style="margin-bottom:2px;">• ${l}</div>`).join("")}</div>`:""}
+
+        ${form.competences?`<span style="${_ts(c)}">${t.comp}</span><div style="font-size:10.5px;">${form.competences.split("\n").filter(Boolean).map(l=>`<div style="margin-bottom:2px;">• ${l}</div>`).join("")}</div>`:""}
+
+        ${form.langues.filter(l=>l.langue).length?`
+        <span style="${_ts(c)}">${t.lang}</span>
+        ${form.langues.map(l=>`<div style="font-size:10.5px;margin-bottom:2px;">• <strong>${l.langue}</strong>${l.niveau?" : "+l.niveau:""}</div>`).join("")}`:""}
+
+        <span style="${_ts(c)}">${t.ref}</span>
+        <div style="font-size:10.5px;">${form.references||t.present}</div>
+      </div>`;
+  };
+
+  const generatePDF = async () => {
+    // Vérifier quota
+    const res = await apiPost("/api/cv/generate", {
+      ...form, cvLang:lang, cvColor:color, cvUseColor:useColor,
+    });
+    if(res?.error){
+      alert(`❌ ${res.error}`);
+      return;
+    }
+    // Mettre à jour compteur local
+    if(res?.cv_count !== undefined) setCvCount(res.cv_count);
+
+    let html = "";
+    if(lang==="bilingual"){
+      html = buildCVBlock("fr")+'<div style="page-break-before:always;"></div>'+buildCVBlock("en");
+    } else {
+      html = buildCVBlock(lang);
+    }
+    const win = window.open("","_blank");
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <title>CV - ${form.prenom} ${form.nom}</title>
+      <style>
+        @page{margin:0} @media print{.no-print{display:none!important}body{margin:0}}
+        body{margin:0;background:#fff;}
+      </style>
+    </head><body>
+      <div class="no-print" style="text-align:center;padding:10px;background:#1a3a8f;color:#fff;font-family:Arial,sans-serif;font-size:12px;position:sticky;top:0;z-index:99;">
+        <button onclick="window.print()" style="background:#fff;color:#1a3a8f;border:none;padding:7px 22px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px;margin-right:12px;">🖨️ Imprimer / Enregistrer en PDF</button>
+        <span style="opacity:.7">Dans la boîte d'impression → choisir "Enregistrer en PDF" comme imprimante</span>
+      </div>
+      ${html}
+    </body></html>`);
+    win.document.close();
+  };
+
+  if(loading) return (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"center",minHeight:"60vh",flexDirection:"column",gap:16}}>
+      <div className="spin"/>
+      <span style={{fontSize:13,color:GRAY}}>Chargement de votre profil CV...</span>
+    </div>
+  );
+
+  const inp = {width:"100%",padding:"8px 11px",border:`1.5px solid ${BORDER}`,borderRadius:8,fontSize:12,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff",color:DARK,boxSizing:"border-box"};
+  const S = ({label,children}) => (
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:12,fontWeight:700,color:BLUE,marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+        <div style={{width:3,height:14,background:G,borderRadius:2}}/>{label}
+      </div>
+      {children}
+    </div>
+  );
+
+  return (
+    <div style={{padding:"24px 20px",maxWidth:860,margin:"0 auto"}}>
+      {/* Header */}
+      <div className="fu" style={{marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+        <div>
+          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:900,color:DARK,marginBottom:3}}>📄 Générateur de <Grad>CV</Grad></h1>
+          <p style={{fontSize:12,color:GRAY}}>Modèle canadien professionnel — Sauvegarde automatique</p>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          {/* Rang badge */}
+          {rank!=="free"&&(
+            <span style={{
+              background: RANK_LABELS[rank]?.bg || "rgba(107,114,128,0.1)",
+              color: RANK_LABELS[rank]?.color || GRAY,
+              borderRadius:100, padding:"4px 14px", fontSize:12, fontWeight:700,
+              border:`1.5px solid ${RANK_LABELS[rank]?.color || GRAY}44`,
+            }}>
+              {rank==="bronze"?"🥉":rank==="silver"?"🥈":rank==="gold"?"🥇":"⭐"} {RANK_LABELS[rank]?.label}
+            </span>
+          )}
+          {/* Compteur générations */}
+          <div style={{
+            background: cvCount>=quota && quota>0 ? "rgba(220,38,38,0.07)" : "rgba(5,150,105,0.07)",
+            border: `1.5px solid ${cvCount>=quota && quota>0 ? "rgba(220,38,38,0.2)" : "rgba(5,150,105,0.2)"}`,
+            borderRadius:10, padding:"6px 14px", fontSize:12, textAlign:"center",
+          }}>
+            <div style={{fontWeight:700, color: cvCount>=quota && quota>0 ? "#dc2626" : "#059669"}}>
+              {cvCount} / {quota} générations
+            </div>
+            <div style={{fontSize:10,color:GRAY,marginTop:2}}>
+              {quota===0 ? "Aucun pack actif" : cvCount>=quota ? "Quota atteint" : `${quota-cvCount} restante(s)`}
+            </div>
+          </div>
+          {saving&&<span style={{color:BLUE,fontSize:11}}>💾 Sauvegarde...</span>}
+          {saved&&<span style={{color:"#059669",fontSize:11}}>✅ Sauvegardé</span>}
+        </div>
+      </div>
+
+      {/* Alerte quota atteint */}
+      {quota===0&&(
+        <div style={{background:"rgba(220,38,38,0.07)",border:"1.5px solid rgba(220,38,38,0.2)",borderRadius:12,padding:"14px 18px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:20}}>🔒</span>
+          <div>
+            <div style={{fontWeight:700,color:"#dc2626",fontSize:13,marginBottom:2}}>Aucun pack actif</div>
+            <div style={{fontSize:12,color:GRAY}}>Vous avez besoin d'un pack Bronze (3 CV), Silver (10 CV) ou Gold (30 CV) pour générer votre CV. Contactez votre administrateur.</div>
+          </div>
+        </div>
+      )}
+      {quota>0&&cvCount>=quota&&(
+        <div style={{background:"rgba(220,38,38,0.07)",border:"1.5px solid rgba(220,38,38,0.2)",borderRadius:12,padding:"14px 18px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:20}}>⚠️</span>
+          <div>
+            <div style={{fontWeight:700,color:"#dc2626",fontSize:13,marginBottom:2}}>Quota de générations atteint</div>
+            <div style={{fontSize:12,color:GRAY}}>Votre pack {RANK_LABELS[rank]?.label} permet {quota} génération(s). Vous pouvez toujours modifier et sauvegarder votre profil CV.</div>
+          </div>
+        </div>
+      )}
+
+      {/* Options barre */}
+      <div className="card" style={{padding:16,marginBottom:16,display:"flex",gap:14,flexWrap:"wrap",alignItems:"center"}}>
+        <div>
+          <label style={{fontSize:10,fontWeight:700,color:GRAY,display:"block",marginBottom:3,textTransform:"uppercase"}}>🌐 Version</label>
+          <select value={lang} onChange={e=>changeLang(e.target.value)} style={{...inp,width:190}}>
+            <option value="fr">🇫🇷 Français uniquement</option>
+            <option value="en">🇨🇦 Anglais uniquement</option>
+            <option value="bilingual">🇫🇷🇨🇦 Bilingue (FR + EN)</option>
+          </select>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <label style={{fontSize:10,fontWeight:700,color:GRAY,textTransform:"uppercase"}}>🎨 Rubriques en couleur</label>
+          <input type="checkbox" checked={useColor} onChange={e=>changeUseC(e.target.checked)} style={{width:16,height:16,cursor:"pointer"}}/>
+          {useColor&&<input type="color" value={color} onChange={e=>changeColor(e.target.value)} style={{width:34,height:26,border:`1px solid ${BORDER}`,cursor:"pointer",borderRadius:4}}/>}
+        </div>
+        <button className="btn btn-p" onClick={generatePDF} disabled={quota===0||cvCount>=quota} style={{marginLeft:"auto",padding:"9px 22px",opacity:quota===0||cvCount>=quota?0.4:1}}>
+          🖨️ Générer le PDF {quota>0?`(${quota-cvCount} restant${quota-cvCount>1?"s":""})`:""}
+        </button>
+      </div>
+
+      {/* Formulaire */}
+      <div className="card" style={{padding:22}}>
+
+        <S label="Informations personnelles">
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+            {[["Prénom","prenom",""],["Nom","nom",""],["Titre / Poste visé","titre","Ex: Éducatrice de la petite enfance"],["Email","email",""],["Téléphone","telephone","+1 514 000-0000"],["Adresse","adresse","Ville, Province, Canada"]].map(([l,k,ph])=>(
+              <div key={k}>
+                <label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>{l}</label>
+                <input style={inp} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={ph}/>
+              </div>
+            ))}
+          </div>
+        </S>
+
+        <S label="Résumé professionnel">
+          <textarea style={{...inp,minHeight:90,resize:"vertical"}} value={form.resume} onChange={e=>upd("resume",e.target.value)} placeholder="Bref résumé de votre profil, expériences et objectif professionnel au Canada..."/>
+        </S>
+
+        <S label="Expériences professionnelles">
+          {form.experiences.map((exp,i)=>(
+            <div key={i} style={{background:BG,borderRadius:10,padding:14,marginBottom:10,border:`1px solid ${BORDER}`}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:8}}>
+                {[["Poste / Titre","poste"],["Entreprise / Organisation","entreprise"],["Lieu (Ville, Pays)","lieu"]].map(([l,k])=>(
+                  <div key={k}><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>{l}</label><input style={inp} value={exp[k]} onChange={e=>updArr("experiences",i,k,e.target.value)}/></div>
+                ))}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                  <div><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>Début</label><input style={inp} value={exp.debut} onChange={e=>updArr("experiences",i,"debut",e.target.value)} placeholder="Jan 2021"/></div>
+                  <div><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>Fin</label><input style={inp} value={exp.fin} onChange={e=>updArr("experiences",i,"fin",e.target.value)} placeholder="Aujourd'hui"/></div>
+                </div>
+              </div>
+              <label style={{fontSize:10,color:GRAY,display:"block",marginBottom:4}}>Tâches / Réalisations</label>
+              {exp.taches.map((t,ti)=>(
+                <div key={ti} style={{display:"flex",gap:6,marginBottom:5}}>
+                  <input style={{...inp,flex:1}} value={t} onChange={e=>updTache(i,ti,e.target.value)} placeholder="Ex: Accueillir les enfants et favoriser leur intégration"/>
+                  {exp.taches.length>1&&<button onClick={()=>{const n=[...form.experiences];n[i].taches=n[i].taches.filter((_,x)=>x!==ti);const nf={...form,experiences:n};setForm(nf);triggerSave(nf);}} style={{background:"rgba(220,38,38,0.1)",border:"none",color:"#dc2626",borderRadius:6,padding:"4px 9px",cursor:"pointer",fontSize:12,flexShrink:0}}>✕</button>}
+                </div>
+              ))}
+              <div style={{display:"flex",gap:8,marginTop:4}}>
+                <button onClick={()=>{const n=[...form.experiences];n[i].taches=[...n[i].taches,""];const nf={...form,experiences:n};setForm(nf);triggerSave(nf);}} className="btn btn-o btn-sm" style={{fontSize:11}}>+ Tâche</button>
+                {form.experiences.length>1&&<button onClick={()=>delArr("experiences",i)} style={{background:"rgba(220,38,38,0.07)",border:"1px solid rgba(220,38,38,0.2)",color:"#dc2626",borderRadius:7,padding:"4px 11px",cursor:"pointer",fontSize:11}}>🗑 Supprimer</button>}
+              </div>
+            </div>
+          ))}
+          <button onClick={()=>addArr("experiences",{poste:"",entreprise:"",lieu:"",debut:"",fin:"",taches:[""]})} className="btn btn-o btn-sm">+ Ajouter une expérience</button>
+        </S>
+
+        <S label="Formation & Éducation">
+          {form.formations.map((f,i)=>(
+            <div key={i} style={{background:BG,borderRadius:10,padding:14,marginBottom:10,border:`1px solid ${BORDER}`}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
+                {[["Diplôme / Formation","diplome"],["Établissement","etablissement"],["Lieu","lieu"],["Année","annee"]].map(([l,k])=>(
+                  <div key={k}><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>{l}</label><input style={inp} value={f[k]} onChange={e=>updArr("formations",i,k,e.target.value)} placeholder={k==="annee"?"2020":""}/></div>
+                ))}
+              </div>
+              {form.formations.length>1&&<button onClick={()=>delArr("formations",i)} style={{marginTop:8,background:"rgba(220,38,38,0.07)",border:"1px solid rgba(220,38,38,0.2)",color:"#dc2626",borderRadius:7,padding:"4px 11px",cursor:"pointer",fontSize:11}}>🗑 Supprimer</button>}
+            </div>
+          ))}
+          <button onClick={()=>addArr("formations",{diplome:"",etablissement:"",lieu:"",annee:""})} className="btn btn-o btn-sm">+ Ajouter une formation</button>
+        </S>
+
+        <S label="Certifications & Formation continue">
+          <textarea style={{...inp,minHeight:100,resize:"vertical"}} value={form.certifications} onChange={e=>upd("certifications",e.target.value)} placeholder={"TOT Montessori – Tunis – août 2025\nPremiers Secours pédiatriques – sept 2025\n..."}/>
+          <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une certification par ligne — elles seront listées avec • dans le CV</div>
+        </S>
+
+        <S label="Compétences">
+          <textarea style={{...inp,minHeight:80,resize:"vertical"}} value={form.competences} onChange={e=>upd("competences",e.target.value)} placeholder={"Leadership et gestion d'équipe\nPlanification pédagogique\nCommunication et écoute active\n..."}/>
+          <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une compétence par ligne</div>
+        </S>
+
+        <S label="Langues">
+          {form.langues.map((l,i)=>(
+            <div key={i} style={{display:"flex",gap:9,marginBottom:7,alignItems:"center"}}>
+              <input style={{...inp,flex:"0 0 140px"}} value={l.langue} onChange={e=>updArr("langues",i,"langue",e.target.value)} placeholder="Français"/>
+              <input style={{...inp,flex:1}} value={l.niveau} onChange={e=>updArr("langues",i,"niveau",e.target.value)} placeholder="Lu, écrit et parlé (Courant)"/>
+              {form.langues.length>1&&<button onClick={()=>delArr("langues",i)} style={{background:"rgba(220,38,38,0.1)",border:"none",color:"#dc2626",borderRadius:6,padding:"4px 9px",cursor:"pointer",fontSize:12,flexShrink:0}}>✕</button>}
+            </div>
+          ))}
+          <button onClick={()=>addArr("langues",{langue:"",niveau:""})} className="btn btn-o btn-sm">+ Ajouter une langue</button>
+        </S>
+
+        <S label="Références">
+          <input style={inp} value={form.references} onChange={e=>upd("references",e.target.value)} placeholder="Disponible sur demande / Available upon request"/>
+        </S>
+
+        <div style={{display:"flex",justifyContent:"center",gap:12,paddingTop:16,flexWrap:"wrap"}}>
+          <button className="btn btn-p" onClick={generatePDF} disabled={quota===0||cvCount>=quota} style={{padding:"11px 30px",fontSize:13,opacity:quota===0||cvCount>=quota?0.4:1}}>
+            🖨️ Générer &amp; Imprimer {quota>0?`(${quota-cvCount} restant${quota-cvCount>1?"s":""})`:""}
+          </button>
+          <button className="btn btn-o" onClick={async()=>{setSaving(true);await apiPost("/api/cv/save",{...form,cvLang:lang,cvColor:color,cvUseColor:useColor});setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2500);}} style={{padding:"11px 22px",fontSize:13}}>
+            💾 Sauvegarder maintenant
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   const [tab,setTab]         = useState("home");
   const [activeSerie,setActiveSerie] = useState(null);
@@ -1665,15 +2053,20 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
           </div>
         )}
 
-        {/* Coming Soon — CV, Emploi, EE, EO */}
-        {(tab==="cv"||tab==="emploi"||tab==="ee"||tab==="eo")&&(
+        {/* Générateur CV */}
+        {tab==="cv"&&(
+          <GenerateurCV user={user} isPremium={isPremium}/>
+        )}
+
+        {/* Coming Soon — Emploi, EE, EO */}
+        {(tab==="emploi"||tab==="ee"||tab==="eo")&&(
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"70vh",padding:32,textAlign:"center"}}>
-            <div style={{fontSize:64,marginBottom:20}}>{tab==="cv"?"📄":tab==="emploi"?"🤖":tab==="ee"?"✍️":"🗣️"}</div>
+            <div style={{fontSize:64,marginBottom:20}}>{tab==="emploi"?"🤖":tab==="ee"?"✍️":"🗣️"}</div>
             <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:900,color:DARK,marginBottom:10}}>
-              {tab==="cv"?"Générateur CV":tab==="emploi"?"Emploi IA":tab==="ee"?"Expression Écrite":"Expression Orale"} — <Grad>Bientôt</Grad>
+              {tab==="emploi"?"Emploi IA":tab==="ee"?"Expression Écrite":"Expression Orale"} — <Grad>Bientôt</Grad>
             </h2>
             <p style={{fontSize:14,color:GRAY,maxWidth:420,lineHeight:1.75}}>
-              {tab==="ee"||tab==="eo"?"Ce module de production est en cours de développement et sera disponible prochainement.":"Ce module est en cours de développement. Il sera disponible prochainement pour tous les abonnés LaunchPad."}
+              Ce module est en cours de développement et sera disponible prochainement.
             </p>
             <div style={{marginTop:24,background:GS,border:`1px solid ${BORDER}`,borderRadius:10,padding:"12px 20px",fontSize:12,color:BLUE,fontWeight:600}}>
               🚀 Nous travaillons activement dessus — restez connecté !
@@ -2344,9 +2737,9 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
             <div className="admin-kpi-grid" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
               {[
                 {icon:"👥",val:users.length,label:"Utilisateurs",sub:`${users.filter(u=>u.plan==="premium").length} premium`,color:"#1a3a8f"},
+                {icon:"🥇",val:users.filter(u=>u.rank==="gold").length,label:"Rang Gold",sub:`${users.filter(u=>u.rank==="silver").length} Silver · ${users.filter(u=>u.rank==="bronze").length} Bronze`,color:"#c8a227"},
                 {icon:"📖",val:ceSeries.length,label:"Séries CE",sub:`${ceSeries.filter(s=>!s.premium).length} gratuites`,color:BLUE},
-                {icon:"🎧",val:coSeries.length,label:"Séries CO",sub:`${coSeries.filter(s=>!s.premium).length} gratuites`,color:MAG},
-                {icon:"📋",val:series.reduce((a,s)=>a+(s.questions?.length||0),0),label:"Questions",sub:"CE + CO",color:"#7c3aed"},
+                {icon:"📄",val:users.reduce((a,u)=>a+(u.cv_count||0),0),label:"CV Générés",sub:"Total plateforme",color:"#a0197e"},
               ].map((s,i)=>(
                 <div key={i} className="card fu" style={{animationDelay:`${i*.06}s`,padding:14,cursor:"default"}}>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:18}}>{s.icon}</span><div style={{width:6,height:6,borderRadius:"50%",background:s.color,marginTop:2}}/></div>
@@ -2416,19 +2809,34 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
                       <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
                         <span style={{fontSize:13,fontWeight:700,color:DARK}}>{u.nom}</span>
                         <span className="tag" style={{background:u.plan==="premium"?G:"rgba(90,101,119,0.1)",color:u.plan==="premium"?"#fff":GRAY,fontSize:9}}>{u.plan==="premium"?"⭐ Premium":"Free"}</span>
+                        {u.rank&&u.rank!=="free"&&(
+                          <span className="tag" style={{background:RANK_LABELS[u.rank]?.bg||"rgba(107,114,128,0.1)",color:RANK_LABELS[u.rank]?.color||GRAY,fontSize:9,border:`1px solid ${RANK_LABELS[u.rank]?.color||GRAY}44`}}>
+                            {u.rank==="bronze"?"🥉":u.rank==="silver"?"🥈":"🥇"} {RANK_LABELS[u.rank]?.label}
+                          </span>
+                        )}
                         <span className="tag" style={{background:u.status==="actif"?"rgba(5,150,105,0.09)":"rgba(220,38,38,0.09)",color:u.status==="actif"?"#059669":"#dc2626",fontSize:9}}>{u.status}</span>
                       </div>
                       <div style={{fontSize:11,color:GRAY}}>✉ {u.email} · {p.flag} {p.name} · {u.joined}</div>
                     </div>
                     <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                      <select value={u.plan} onChange={e=>updateUser(u.id,{plan:e.target.value})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                      <select value={u.plan} onChange={e=>updateUser(u.id,{plan:e.target.value,rank:u.rank||"free",status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
                         <option value="free">Free</option>
                         <option value="premium">Premium ⭐</option>
                       </select>
-                      <select value={u.status} onChange={e=>updateUser(u.id,{status:e.target.value})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                      <select value={u.rank||"free"} onChange={e=>updateUser(u.id,{plan:u.plan,rank:e.target.value,status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                        <option value="free">🔓 Free</option>
+                        <option value="bronze">🥉 Bronze</option>
+                        <option value="silver">🥈 Silver</option>
+                        <option value="gold">🥇 Gold</option>
+                      </select>
+                      <select value={u.status} onChange={e=>updateUser(u.id,{plan:u.plan,rank:u.rank||"free",status:e.target.value})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
                         <option value="actif">✅ Actif</option>
                         <option value="suspendu">🚫 Suspendu</option>
                       </select>
+                      <div style={{fontSize:10,color:GRAY,minWidth:50,textAlign:"center"}}>
+                        <div style={{fontWeight:700,color:DARK}}>{u.cv_count||0}</div>
+                        <div>CV gén.</div>
+                      </div>
                       <button onClick={()=>deleteUser(u.id)} style={{padding:"4px 8px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
                     </div>
                   </div>
