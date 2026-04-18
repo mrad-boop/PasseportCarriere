@@ -1010,10 +1010,12 @@ function SeriesList({type,series,isPremium,attempts,onStart}) {
         <p style={{fontSize:13,color:GRAY}}>39 questions · {timeLimit} min · Barème officiel A1→C2 · 699 pts max</p>
       </div>
 
-      {/* Free badge */}
-      <div style={{background:"rgba(5,150,105,0.08)",border:"1px solid rgba(5,150,105,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:20,fontSize:13,color:"#065f46"}}>
-        <strong>✅ {freeSeries.length} séries gratuites</strong> incluses · Les séries Premium nécessitent un abonnement
-      </div>
+      {/* Free badge — affiché uniquement aux comptes gratuits */}
+      {!isPremium&&(
+        <div style={{background:"rgba(5,150,105,0.08)",border:"1px solid rgba(5,150,105,0.2)",borderRadius:10,padding:"10px 14px",marginBottom:20,fontSize:13,color:"#065f46"}}>
+          <strong>✅ {freeSeries.length} séries gratuites</strong> incluses · Les séries Premium nécessitent un abonnement
+        </div>
+      )}
 
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {series.map((serie,idx)=>{
@@ -1408,6 +1410,9 @@ function PaymentModal({onClose}) {
     </div>
   );
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PROFIL TAB — Editable
 ═══════════════════════════════════════════════════════════════ */
 function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const [form,setForm]   = useState({
