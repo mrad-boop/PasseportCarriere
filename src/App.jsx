@@ -774,18 +774,17 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
                   )}
 
                   {/* CV Quota badge */}
-                  {(()=>{
-                    const q = pack.id==="bronze"?3:pack.id==="silver"?10:pack.id==="gold"?30:0;
-                    return q>0?(
-                      <div style={{background:pack.highlight?"rgba(255,255,255,0.08)":pack.id==="gold"?"rgba(200,162,39,0.08)":pack.id==="silver"?"rgba(140,155,171,0.1)":"rgba(205,127,50,0.08)",border:`1px solid ${pack.highlight?"rgba(255,255,255,0.12)":pack.color+"44"}`,borderRadius:9,padding:"8px 12px",marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
-                        <span style={{fontSize:14}}>📄</span>
-                        <div>
-                          <div style={{fontSize:9,fontWeight:900,color:pack.highlight?"rgba(255,255,255,0.5)":pack.colorDark,letterSpacing:1,marginBottom:2}}>GÉNÉRATEUR DE CV</div>
-                          <div style={{fontSize:12,fontWeight:700,color:pack.highlight?"#fff":pack.colorDark}}>{q} génération{q>1?"s":""} incluse{q>1?"s":""}</div>
+                  {["bronze","silver","gold"].includes(pack.id)&&(
+                    <div style={{background:pack.highlight?"rgba(255,255,255,0.08)":pack.id==="gold"?"rgba(200,162,39,0.08)":pack.id==="silver"?"rgba(140,155,171,0.1)":"rgba(205,127,50,0.08)",border:`1px solid ${pack.highlight?"rgba(255,255,255,0.12)":pack.color+"44"}`,borderRadius:9,padding:"8px 12px",marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:14}}>📄</span>
+                      <div>
+                        <div style={{fontSize:9,fontWeight:900,color:pack.highlight?"rgba(255,255,255,0.5)":pack.colorDark,letterSpacing:1,marginBottom:2}}>GÉNÉRATEUR DE CV</div>
+                        <div style={{fontSize:12,fontWeight:700,color:pack.highlight?"#fff":pack.colorDark}}>
+                          {pack.id==="bronze"?"3 générations incluses":pack.id==="silver"?"10 générations incluses":"30 générations incluses"}
                         </div>
                       </div>
-                    ):null;
-                  })()}
+                    </div>
+                  )}
 
                   {/* Accès */}
                   <div style={{textAlign:"center",fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:pack.highlight?"#fff":DARK,marginBottom:16}}>
