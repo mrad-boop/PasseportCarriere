@@ -3084,7 +3084,23 @@ export default function App() {
   useEffect(() => {
     // Toujours charger les données publiques depuis le backend
     apiGet("/api/series").then(d=>{ if(Array.isArray(d)&&d.length>0) setSeries(d); });
-    apiGet("/api/packs").then(d=>{ if(Array.isArray(d)&&d.length>0) setPacks(d); });
+    apiGet("/api/packs").then(d=>{
+      if(Array.isArray(d)&&d.length>0){
+        // Merger avec INIT_PACKS pour conserver les champs visuels (ribbonColor, colorDark, etc.)
+        const merged = d.map(pack=>{
+          const base = INIT_PACKS.find(p=>p.id===pack.id) || {};
+          return { ...base, ...pack,
+            ribbonColor: pack.ribbonColor || base.ribbonColor,
+            colorDark:   pack.colorDark   || base.colorDark,
+            color:       pack.color       || base.color,
+            ribbon:      pack.ribbon      || base.ribbon,
+            highlight:   pack.highlight   !== undefined ? !!pack.highlight : !!base.highlight,
+            features:    Array.isArray(pack.features) ? pack.features : (base.features||[]),
+          };
+        });
+        setPacks(merged);
+      }
+    });
     apiGet("/api/packs/config").then(d=>{
       if(d && typeof d==="object"){
         // siteConfig
