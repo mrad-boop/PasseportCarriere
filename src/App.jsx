@@ -1880,7 +1880,6 @@ function GenerateurCV({user, isPremium}) {
                   </div>
                 </div>
               </div>
-              </div>
               {form.formations.length>1&&<button onClick={()=>delArr("formations",i)} style={{marginTop:8,background:"rgba(220,38,38,0.07)",border:"1px solid rgba(220,38,38,0.2)",color:"#dc2626",borderRadius:7,padding:"4px 11px",cursor:"pointer",fontSize:11}}>🗑 Supprimer</button>}
             </div>
           ))}
