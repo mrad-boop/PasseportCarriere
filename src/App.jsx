@@ -2338,37 +2338,37 @@ function SerieEditor({serie,onSave,onCancel,type}) {
 function JsonImportZone({onImport}) {
   const fileRef = useRef();
   const [dragging,setDragging] = useState(false);
-  const [preview,setPreview]   = useState(null);
-  const [error,setError]       = useState("");
+  const [previews,setPreviews] = useState([]); // array of {filename, series[]}
+  const [errors,setErrors]     = useState([]);
 
-  const parse = text => {
-    try {
-      const data = JSON.parse(text.replace(/```json|```/g,"").trim());
-      const arr  = Array.isArray(data)?data:[data];
-      setPreview(arr);
-      setError("");
-    } catch {
-      setError("JSON invalide. Vérifiez le format du fichier.");
-      setPreview(null);
-    }
+  const parseFiles = files => {
+    const list = Array.from(files).slice(0,10);
+    const newPreviews = []; const newErrors = [];
+    let done = 0;
+    list.forEach(f=>{
+      const reader = new FileReader();
+      reader.onload = ev => {
+        try {
+          const data = JSON.parse(ev.target.result.replace(/```json|```/g,"").trim());
+          const arr  = Array.isArray(data)?data:[data];
+          newPreviews.push({filename:f.name, series:arr});
+        } catch {
+          newErrors.push(`❌ ${f.name} : JSON invalide`);
+        }
+        done++;
+        if(done===list.length){
+          setPreviews([...newPreviews]);
+          setErrors([...newErrors]);
+        }
+      };
+      reader.readAsText(f);
+    });
   };
 
-  const handleFile = e => {
-    const f = e.target.files[0];
-    if(!f) return;
-    const reader = new FileReader();
-    reader.onload = ev => parse(ev.target.result);
-    reader.readAsText(f);
-  };
-
-  const handleDrop = e => {
-    e.preventDefault(); setDragging(false);
-    const f = e.dataTransfer.files[0];
-    if(!f) return;
-    const reader = new FileReader();
-    reader.onload = ev => parse(ev.target.result);
-    reader.readAsText(f);
-  };
+  const handleFile = e => { if(e.target.files.length) parseFiles(e.target.files); };
+  const handleDrop = e => { e.preventDefault(); setDragging(false); if(e.dataTransfer.files.length) parseFiles(e.dataTransfer.files); };
+  const totalSeries = previews.reduce((a,p)=>a+p.series.length,0);
+  const allSeries   = previews.flatMap(p=>p.series);
 
   return (
     <div>
@@ -2376,23 +2376,37 @@ function JsonImportZone({onImport}) {
         style={{border:`2px dashed ${dragging?BLUE:BORDER}`,borderRadius:12,padding:24,textAlign:"center",background:dragging?"rgba(26,58,143,0.04)":BG,cursor:"pointer",transition:"all .18s"}}
         onClick={()=>fileRef.current.click()}>
         <div style={{fontSize:32,marginBottom:8}}>📁</div>
-        <div style={{fontSize:13,fontWeight:600,color:DARK,marginBottom:3}}>Glissez un fichier JSON ici</div>
-        <div style={{fontSize:11,color:GRAY}}>ou cliquez pour parcourir · Format : [{"{type, title, premium, questions:[...]}"}]</div>
+        <div style={{fontSize:13,fontWeight:600,color:DARK,marginBottom:3}}>Glissez vos fichiers JSON ici</div>
+        <div style={{fontSize:11,color:GRAY}}>ou cliquez pour parcourir · <strong>Jusqu'à 10 fichiers JSON simultanément</strong></div>
       </div>
-      <input ref={fileRef} type="file" accept=".json,application/json" style={{display:"none"}} onChange={handleFile}/>
+      <input ref={fileRef} type="file" accept=".json,application/json" multiple style={{display:"none"}} onChange={handleFile}/>
 
-      {error&&<div style={{marginTop:10,fontSize:12,color:"#dc2626",background:"rgba(220,38,38,0.08)",border:"1px solid rgba(220,38,38,0.2)",borderRadius:8,padding:"8px 12px"}}>{error}</div>}
+      {errors.length>0&&(
+        <div style={{marginTop:10,fontSize:12,color:"#dc2626",background:"rgba(220,38,38,0.08)",border:"1px solid rgba(220,38,38,0.2)",borderRadius:8,padding:"8px 12px"}}>
+          {errors.map((e,i)=><div key={i}>{e}</div>)}
+        </div>
+      )}
 
-      {preview&&(
+      {previews.length>0&&(
         <div style={{marginTop:12,background:"rgba(5,150,105,0.06)",border:"1px solid rgba(5,150,105,0.2)",borderRadius:10,padding:"12px 14px"}}>
-          <div style={{fontSize:12,fontWeight:700,color:"#059669",marginBottom:8}}>✓ {preview.length} série(s) détectée(s) :</div>
-          {preview.slice(0,5).map((s,i)=>(
-            <div key={i} style={{fontSize:11,color:DARK,marginBottom:3}}>• [{s.type||"?"}] {s.title||"Sans titre"} — {s.questions?.length||0} questions {s.premium?"⭐":""}</div>
+          <div style={{fontSize:12,fontWeight:700,color:"#059669",marginBottom:8}}>
+            ✓ {previews.length} fichier(s) · {totalSeries} série(s) détectée(s) :
+          </div>
+          {previews.map((p,pi)=>(
+            <div key={pi} style={{marginBottom:6}}>
+              <div style={{fontSize:11,fontWeight:700,color:DARK,marginBottom:2}}>📄 {p.filename}</div>
+              {p.series.slice(0,3).map((s,i)=>(
+                <div key={i} style={{fontSize:11,color:GRAY,marginLeft:12,marginBottom:1}}>• [{s.type||"?"}] {s.title||"Sans titre"} — {s.questions?.length||0} questions{s.premium?" ⭐":""}</div>
+              ))}
+              {p.series.length>3&&<div style={{fontSize:10,color:GRAY,marginLeft:12}}>…et {p.series.length-3} autre(s)</div>}
+            </div>
           ))}
-          {preview.length>5&&<div style={{fontSize:11,color:GRAY}}>…et {preview.length-5} autre(s)</div>}
-          <button className="btn btn-p btn-sm" onClick={()=>{onImport(preview);setPreview(null);}} style={{marginTop:10}}>
-            ✅ Importer ces {preview.length} série(s)
-          </button>
+          <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
+            <button className="btn btn-p btn-sm" onClick={()=>{onImport(allSeries);setPreviews([]);setErrors([]);}}>
+              ✅ Importer {totalSeries} série(s)
+            </button>
+            <button className="btn btn-o btn-sm" onClick={()=>{setPreviews([]);setErrors([]);}}>✕ Annuler</button>
+          </div>
         </div>
       )}
     </div>
@@ -2670,6 +2684,9 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
   const [modal,setModal] = useState(null);
   const [search,setSearch]=useState("");
   const [toast,showToast]=useToast();
+  const [addUserModal,setAddUserModal]=useState(false);
+  const [newUser,setNewUser]=useState({nom:"",email:"",password:"",plan:"free",rank:"free"});
+  const [addUserError,setAddUserError]=useState("");
 
   // Charger users et séries depuis la DB dès que l'admin s'ouvre
   useEffect(()=>{
@@ -2875,10 +2892,62 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
         {/* USERS */}
         {tab==="users"&&(
           <div style={{padding:"24px 16px"}}>
-            <div className="fu" style={{marginBottom:20}}>
-              <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:DARK,marginBottom:3}}>Utilisateurs</h1>
-              <p style={{fontSize:13,color:GRAY}}>{users.length} comptes enregistrés</p>
+            <div className="fu" style={{marginBottom:16,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+              <div>
+                <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:DARK,marginBottom:2}}>Utilisateurs</h1>
+                <p style={{fontSize:12,color:GRAY}}>{users.length} comptes enregistrés</p>
+              </div>
+              <button className="btn btn-p btn-sm" onClick={()=>setAddUserModal(true)}>+ Ajouter un utilisateur</button>
             </div>
+
+            {/* Modal ajout utilisateur */}
+            {addUserModal&&(
+              <div style={{position:"fixed",inset:0,background:"rgba(10,16,30,.7)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+                <div className="card" style={{width:"100%",maxWidth:420,padding:28}}>
+                  <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK,marginBottom:18}}>Ajouter un utilisateur</h3>
+                  <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+                    <div><label style={{fontSize:10,fontWeight:700,color:GRAY,display:"block",marginBottom:3,textTransform:"uppercase"}}>Nom complet</label><input className="inp" value={newUser.nom} onChange={e=>setNewUser(n=>({...n,nom:e.target.value}))}/></div>
+                    <div><label style={{fontSize:10,fontWeight:700,color:GRAY,display:"block",marginBottom:3,textTransform:"uppercase"}}>Email</label><input className="inp" type="email" value={newUser.email} onChange={e=>setNewUser(n=>({...n,email:e.target.value}))}/></div>
+                    <div><label style={{fontSize:10,fontWeight:700,color:GRAY,display:"block",marginBottom:3,textTransform:"uppercase"}}>Mot de passe</label><input className="inp" type="password" value={newUser.password} onChange={e=>setNewUser(n=>({...n,password:e.target.value}))}/></div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                      <div><label style={{fontSize:10,fontWeight:700,color:GRAY,display:"block",marginBottom:3,textTransform:"uppercase"}}>Plan</label>
+                        <select className="inp" value={newUser.plan} onChange={e=>setNewUser(n=>({...n,plan:e.target.value}))}>
+                          <option value="free">Free</option>
+                          <option value="premium">Premium ⭐</option>
+                        </select>
+                      </div>
+                      <div><label style={{fontSize:10,fontWeight:700,color:GRAY,display:"block",marginBottom:3,textTransform:"uppercase"}}>Rang</label>
+                        <select className="inp" value={newUser.rank} onChange={e=>setNewUser(n=>({...n,rank:e.target.value}))}>
+                          <option value="free">🔓 Free</option>
+                          <option value="bronze">🥉 Bronze</option>
+                          <option value="silver">🥈 Silver</option>
+                          <option value="gold">🥇 Gold</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  {addUserError&&<div style={{color:"#dc2626",fontSize:12,marginBottom:10}}>{addUserError}</div>}
+                  <div style={{display:"flex",gap:10}}>
+                    <button className="btn btn-p" style={{flex:1}} onClick={async()=>{
+                      if(!newUser.nom||!newUser.email||!newUser.password){setAddUserError("Tous les champs sont requis.");return;}
+                      const res=await apiPost("/api/auth/register",{nom:newUser.nom,email:newUser.email,password:newUser.password,pays:"CA"});
+                      if(res?.error){setAddUserError(res.error);return;}
+                      // Mettre à jour plan et rang
+                      if(res?.user?.id){
+                        await apiPut(`/api/users/${res.user.id}`,{plan:newUser.plan,rank:newUser.rank,status:"actif"});
+                      }
+                      apiGet("/api/users").then(d=>{if(Array.isArray(d))setUsers(d);});
+                      setAddUserModal(false);
+                      setNewUser({nom:"",email:"",password:"",plan:"free",rank:"free"});
+                      setAddUserError("");
+                      showToast("Utilisateur créé !");
+                    }}>Créer</button>
+                    <button className="btn btn-o" onClick={()=>{setAddUserModal(false);setAddUserError("");}}>Annuler</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div style={{background:"#fff",border:`1px solid ${BORDER}`,borderRadius:10,padding:"9px 13px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
               <span style={{color:GRAY}}>🔍</span>
               <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher par nom ou email…" style={{flex:1,border:"none",outline:"none",fontSize:13,fontFamily:"'DM Sans',sans-serif",color:DARK,background:"transparent"}}/>
@@ -2886,12 +2955,14 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {users.filter(u=>u.nom.toLowerCase().includes(search.toLowerCase())||u.email.toLowerCase().includes(search.toLowerCase())).map(u=>{
                 const p=getPays(u.pays);
+                const isAdmin = u.email==="admin@launchpad.ca" || u.role==="admin";
                 return(
                   <div key={u.id} style={{background:"#fff",border:`1.5px solid ${u.status==="suspendu"?"rgba(220,38,38,0.2)":BORDER}`,borderRadius:11,padding:"13px 16px",display:"flex",alignItems:"center",gap:12}}>
-                    <div style={{width:34,height:34,borderRadius:"50%",background:u.plan==="premium"?G:GS,display:"flex",alignItems:"center",justifyContent:"center",color:u.plan==="premium"?"#fff":BLUE,fontWeight:700,fontSize:12,flexShrink:0}}>{u.nom.charAt(0)}</div>
+                    <div style={{width:34,height:34,borderRadius:"50%",background:isAdmin?"#1a3a8f":u.plan==="premium"?G:GS,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:12,flexShrink:0}}>{u.nom.charAt(0)}</div>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
                         <span style={{fontSize:13,fontWeight:700,color:DARK}}>{u.nom}</span>
+                        {isAdmin&&<span className="tag" style={{background:"rgba(26,58,143,0.1)",color:BLUE,fontSize:9}}>🛡 Admin</span>}
                         <span className="tag" style={{background:u.plan==="premium"?G:"rgba(90,101,119,0.1)",color:u.plan==="premium"?"#fff":GRAY,fontSize:9}}>{u.plan==="premium"?"⭐ Premium":"Free"}</span>
                         {u.rank&&u.rank!=="free"&&(
                           <span className="tag" style={{background:RANK_LABELS[u.rank]?.bg||"rgba(107,114,128,0.1)",color:RANK_LABELS[u.rank]?.color||GRAY,fontSize:9,border:`1px solid ${RANK_LABELS[u.rank]?.color||GRAY}44`}}>
@@ -2902,27 +2973,32 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
                       </div>
                       <div style={{fontSize:11,color:GRAY}}>✉ {u.email} · {p.flag} {p.name} · {u.joined}</div>
                     </div>
-                    <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                      <select value={u.plan} onChange={e=>updateUser(u.id,{plan:e.target.value,rank:u.rank||"free",status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
-                        <option value="free">Free</option>
-                        <option value="premium">Premium ⭐</option>
-                      </select>
-                      <select value={u.rank||"free"} onChange={e=>updateUser(u.id,{plan:u.plan,rank:e.target.value,status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
-                        <option value="free">🔓 Free</option>
-                        <option value="bronze">🥉 Bronze</option>
-                        <option value="silver">🥈 Silver</option>
-                        <option value="gold">🥇 Gold</option>
-                      </select>
-                      <select value={u.status} onChange={e=>updateUser(u.id,{plan:u.plan,rank:u.rank||"free",status:e.target.value})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
-                        <option value="actif">✅ Actif</option>
-                        <option value="suspendu">🚫 Suspendu</option>
-                      </select>
-                      <div style={{fontSize:10,color:GRAY,minWidth:50,textAlign:"center"}}>
-                        <div style={{fontWeight:700,color:DARK}}>{u.cv_count||0}</div>
-                        <div>CV gén.</div>
+                    {isAdmin ? (
+                      /* Compte admin — lecture seule, juste badge */
+                      <span style={{fontSize:11,color:BLUE,fontWeight:600,padding:"4px 10px",border:`1px solid ${BLUE}33`,borderRadius:7,background:"rgba(26,58,143,0.05)"}}>🔒 Protégé</span>
+                    ) : (
+                      <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
+                        <select value={u.plan} onChange={e=>updateUser(u.id,{plan:e.target.value,rank:u.rank||"free",status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                          <option value="free">Free</option>
+                          <option value="premium">Premium ⭐</option>
+                        </select>
+                        <select value={u.rank||"free"} onChange={e=>updateUser(u.id,{plan:u.plan,rank:e.target.value,status:u.status})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                          <option value="free">🔓 Free</option>
+                          <option value="bronze">🥉 Bronze</option>
+                          <option value="silver">🥈 Silver</option>
+                          <option value="gold">🥇 Gold</option>
+                        </select>
+                        <select value={u.status} onChange={e=>updateUser(u.id,{plan:u.plan,rank:u.rank||"free",status:e.target.value})} style={{padding:"4px 6px",border:`1.5px solid ${BORDER}`,borderRadius:7,fontSize:11,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff"}}>
+                          <option value="actif">✅ Actif</option>
+                          <option value="suspendu">🚫 Suspendu</option>
+                        </select>
+                        <div style={{fontSize:10,color:GRAY,minWidth:50,textAlign:"center"}}>
+                          <div style={{fontWeight:700,color:DARK}}>{u.cv_count||0}</div>
+                          <div>CV gén.</div>
+                        </div>
+                        <button onClick={()=>deleteUser(u.id)} style={{padding:"4px 8px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
                       </div>
-                      <button onClick={()=>deleteUser(u.id)} style={{padding:"4px 8px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
-                    </div>
+                    )}
                   </div>
                 );
               })}
