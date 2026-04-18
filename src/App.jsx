@@ -643,30 +643,51 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
             ))}
           </div>
 
-          {/* ── 2 SERVICES COMING SOON ── */}
+
+          {/* ── SERVICES PREMIUM ── */}
           <div style={{marginBottom:40}}>
             <div style={{textAlign:"center",marginBottom:22}}>
-              <span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"4px 14px",borderRadius:100,background:"rgba(90,101,119,0.1)",border:`1px solid ${BORDER}`,fontSize:11,fontWeight:700,color:GRAY,letterSpacing:.5}}>🚀 PROCHAINEMENT</span>
-              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:DARK,marginTop:10,marginBottom:6}}>{cfg.comingSoonTitle}</h3>
-              <p style={{fontSize:13,color:GRAY}}>{cfg.comingSoonSubtitle}</p>
+              <span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"4px 14px",borderRadius:100,background:"rgba(5,150,105,0.1)",border:"1px solid rgba(5,150,105,0.25)",fontSize:11,fontWeight:700,color:"#059669",letterSpacing:.5}}>✅ SERVICES PREMIUM</span>
+              <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:22,fontWeight:900,color:DARK,marginTop:10,marginBottom:6}}>Boostez votre candidature au Canada</h3>
+              <p style={{fontSize:13,color:GRAY}}>Des outils professionnels inclus dans vos packs pour maximiser vos chances</p>
             </div>
             <div className="coming-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
               {[
-                {icon:"📄",color:"#a0197e",bg:"rgba(160,25,126,0.06)",border:"rgba(160,25,126,0.2)",t:cfg.cvTitle,d:cfg.cvDesc,chips:["IA Rédactrice","4 formats","ATS optimisé"]},
-                {icon:"💼",color:"#059669",bg:"rgba(5,150,105,0.06)",border:"rgba(5,150,105,0.2)",t:cfg.hiremeTitle,d:cfg.hiremeDesc,chips:["Score compatibilité","Lettre IA","Matching intelligent"]},
+                {
+                  icon:"📄", color:"#a0197e", bg:"rgba(160,25,126,0.06)", border:"rgba(160,25,126,0.2)",
+                  t: cfg.cvTitle || "Générateur de CV",
+                  d: cfg.cvDesc || "Créez un CV professionnel au format canadien en quelques minutes. Modèle bilingue FR/EN, optimisé ATS, noir total avec option couleur.",
+                  chips:["Modèle canadien","Bilingue FR/EN","ATS optimisé"],
+                  badge:"✅ Disponible", badgeBg:"rgba(5,150,105,0.1)", badgeColor:"#059669",
+                  quotas:"Bronze 3 · Silver 10 · Gold 30 générations",
+                },
+                {
+                  icon:"💼", color:"#059669", bg:"rgba(5,150,105,0.06)", border:"rgba(5,150,105,0.2)",
+                  t: cfg.hiremeTitle || "HireMe — Emploi IA",
+                  d: cfg.hiremeDesc || "Offres d'emploi scorées par IA selon votre profil. Lettre de motivation générée en 1 clic. Matching intelligent avec le marché canadien.",
+                  chips:["Score compatibilité","Lettre IA","Matching intelligent"],
+                  badge:"🚀 Bientôt", badgeBg:"rgba(90,101,119,0.1)", badgeColor:GRAY,
+                  quotas:"",
+                },
               ].map((s,i)=>(
-                <div key={i} style={{background:"#fff",border:`1.5px dashed ${s.border}`,borderRadius:16,padding:26,position:"relative",overflow:"hidden",opacity:.8}}>
-                  <div style={{position:"absolute",top:12,right:14,background:"rgba(90,101,119,0.1)",borderRadius:100,padding:"3px 10px",fontSize:10,fontWeight:700,color:GRAY}}>🔒 Coming Soon</div>
-                  <div style={{width:48,height:48,borderRadius:13,background:s.bg,border:`1.5px solid ${s.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,marginBottom:14}}>{s.icon}</div>
+                <div key={i} style={{background:"#fff",border:`1.5px solid ${s.border}`,borderRadius:16,padding:26,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.06)"}}>
+                  <div style={{position:"absolute",top:14,right:16,background:s.badgeBg,borderRadius:100,padding:"3px 11px",fontSize:10,fontWeight:700,color:s.badgeColor}}>{s.badge}</div>
+                  <div style={{width:52,height:52,borderRadius:14,background:s.bg,border:`1.5px solid ${s.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,marginBottom:14}}>{s.icon}</div>
                   <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK,marginBottom:6}}>{s.t}</h3>
-                  <p style={{fontSize:12,color:GRAY,lineHeight:1.7,marginBottom:12}}>{s.d}</p>
-                  <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  <p style={{fontSize:12,color:GRAY,lineHeight:1.75,marginBottom:12}}>{s.d}</p>
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:s.quotas?10:0}}>
                     {s.chips.map(c=><span key={c} style={{fontSize:11,padding:"3px 10px",borderRadius:100,background:s.bg,color:s.color,fontWeight:600,border:`1px solid ${s.border}`}}>{c}</span>)}
                   </div>
+                  {s.quotas&&(
+                    <div style={{fontSize:10,color:s.color,fontWeight:600,background:s.bg,borderRadius:8,padding:"5px 10px",border:`1px solid ${s.border}`}}>
+                      🎯 {s.quotas}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
+
 
           {/* ── NOS AVANTAGES (depuis image 1) ── */}
           <div style={{background:"linear-gradient(135deg,#0f1827 0%,#1a2744 100%)",borderRadius:20,padding:"52px 48px",marginBottom:0,position:"relative",overflow:"hidden"}}>
@@ -714,12 +735,13 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
                   position:"absolute",top:0,right:0,
                   background:pack.ribbonColor,
                   color:"#fff",
-                  fontSize:10,fontWeight:900,letterSpacing:.8,
-                  padding:"6px 14px 6px 20px",
-                  borderRadius:"0 14px 0 18px",
-                  boxShadow:`-2px 2px 8px ${pack.ribbonColor}66`,
+                  fontSize:9,fontWeight:900,letterSpacing:.6,
+                  padding:"5px 12px 5px 18px",
+                  borderRadius:"0 14px 0 16px",
+                  boxShadow:`-2px 2px 8px ${pack.ribbonColor}55`,
                   zIndex:2,
                   fontFamily:"'DM Sans',sans-serif",
+                  whiteSpace:"nowrap",
                 }}>{pack.ribbon}</div>
 
                 {/* Header */}
@@ -745,11 +767,25 @@ function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials
 
                   {/* Bonus */}
                   {pack.bonus&&(
-                    <div style={{background:pack.highlight?"rgba(255,255,255,0.1)":"rgba(5,150,105,0.07)",border:`1px solid ${pack.highlight?"rgba(255,255,255,0.15)":"rgba(5,150,105,0.2)"}`,borderRadius:9,padding:"10px 12px",marginBottom:16}}>
+                    <div style={{background:pack.highlight?"rgba(255,255,255,0.1)":"rgba(5,150,105,0.07)",border:`1px solid ${pack.highlight?"rgba(255,255,255,0.15)":"rgba(5,150,105,0.2)"}`,borderRadius:9,padding:"10px 12px",marginBottom:10}}>
                       <div style={{fontSize:9,fontWeight:900,color:pack.highlight?"#86efac":"#059669",letterSpacing:1,marginBottom:5}}>BONUS</div>
                       <div style={{fontSize:12,color:pack.highlight?"rgba(255,255,255,0.8)":DARK}}>{pack.bonus}</div>
                     </div>
                   )}
+
+                  {/* CV Quota badge */}
+                  {(()=>{
+                    const q = pack.id==="bronze"?3:pack.id==="silver"?10:pack.id==="gold"?30:0;
+                    return q>0?(
+                      <div style={{background:pack.highlight?"rgba(255,255,255,0.08)":pack.id==="gold"?"rgba(200,162,39,0.08)":pack.id==="silver"?"rgba(140,155,171,0.1)":"rgba(205,127,50,0.08)",border:`1px solid ${pack.highlight?"rgba(255,255,255,0.12)":pack.color+"44"}`,borderRadius:9,padding:"8px 12px",marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:14}}>📄</span>
+                        <div>
+                          <div style={{fontSize:9,fontWeight:900,color:pack.highlight?"rgba(255,255,255,0.5)":pack.colorDark,letterSpacing:1,marginBottom:2}}>GÉNÉRATEUR DE CV</div>
+                          <div style={{fontSize:12,fontWeight:700,color:pack.highlight?"#fff":pack.colorDark}}>{q} génération{q>1?"s":""} incluse{q>1?"s":""}</div>
+                        </div>
+                      </div>
+                    ):null;
+                  })()}
 
                   {/* Accès */}
                   <div style={{textAlign:"center",fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:pack.highlight?"#fff":DARK,marginBottom:16}}>
@@ -1478,8 +1514,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate}) {
 ═══════════════════════════════════════════════════════════════ */
 const CV_DEFAULT = {
   prenom:"", nom:"", adresse:"", telephone:"", email:"", titre:"", resume:"",
-  experiences: [{ poste:"", entreprise:"", lieu:"", debut:"", fin:"", taches:[""] }],
-  formations:  [{ diplome:"", etablissement:"", lieu:"", annee:"" }],
+  experiences: [{ poste:"", entreprise:"", lieu:"", debutMois:"", debutAnnee:"", finMois:"", finAnnee:"", taches:[""] }],
+  formations:  [{ diplome:"", etablissement:"", lieu:"", mois:"", annee:"" }],
   competences:"", certifications:"",
   langues: [{ langue:"", niveau:"" }],
   references:"",
@@ -1574,6 +1610,12 @@ function GenerateurCV({user, isPremium}) {
     en:{ resume:"PROFESSIONAL SUMMARY", exp:"WORK EXPERIENCE", form:"EDUCATION", comp:"SKILLS", lang:"LANGUAGES", cert:"CERTIFICATIONS & TRAINING", ref:"REFERENCES", present:"Available upon request" },
   };
 
+  const fmtDate = (m,y) => m&&y?`${String(m).padStart(2,"0")}/${y}`:y||m||"";
+  const fmtRange = (e) => {
+    const d = fmtDate(e.debutMois,e.debutAnnee);
+    const f = e.finMois||e.finAnnee ? fmtDate(e.finMois,e.finAnnee) : "Aujourd'hui";
+    return d ? `${d} — ${f}` : "";
+  };
   const _ts = (c) => `font-size:10.5px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:${useColor?c:"#000"};border-bottom:1.5px solid ${useColor?c:"#000"};padding-bottom:3px;margin-top:14px;margin-bottom:6px;display:block;`;
 
   const buildCVBlock = (lg) => {
@@ -1596,7 +1638,7 @@ function GenerateurCV({user, isPremium}) {
           <div style="margin-bottom:10px;">
             <div style="display:flex;justify-content:space-between;align-items:baseline;">
               <span style="font-weight:700;font-size:11px;">${e.poste}</span>
-              <span style="font-size:10px;color:#444;">${e.debut}${e.fin?" — "+e.fin:""}</span>
+              <span style="font-size:10px;color:#444;">${fmtRange(e)}</span>
             </div>
             <div style="font-size:10px;font-style:italic;margin-bottom:2px;">${e.entreprise}${e.lieu?", "+e.lieu:""}</div>
             <ul style="margin:2px 0 0 0;padding-left:16px;">${e.taches.filter(Boolean).map(ta=>`<li style="margin-bottom:1px;">${ta}</li>`).join("")}</ul>
@@ -1608,7 +1650,7 @@ function GenerateurCV({user, isPremium}) {
           <div style="margin-bottom:6px;">
             <div style="display:flex;justify-content:space-between;align-items:baseline;">
               <span style="font-weight:700;font-size:11px;">${f.diplome}</span>
-              <span style="font-size:10px;color:#444;">${f.annee}</span>
+              <span style="font-size:10px;color:#444;">${fmtDate(f.mois,f.annee)}</span>
             </div>
             <div style="font-size:10px;font-style:italic;">${f.etablissement}${f.lieu?", "+f.lieu:""}</div>
           </div>`).join("")}`:""}
@@ -1771,7 +1813,7 @@ function GenerateurCV({user, isPremium}) {
         </S>
 
         <S label="Résumé professionnel">
-          <textarea style={{...inp,minHeight:90,resize:"vertical"}} value={form.resume} onChange={e=>upd("resume",e.target.value)} placeholder="Bref résumé de votre profil, expériences et objectif professionnel au Canada..."/>
+          <textarea style={{...inp,minHeight:90,resize:"vertical"}} value={form.resume} onChange={e=>upd("resume",e.target.value)} placeholder="Décrivez votre profil professionnel, vos années d'expérience et votre objectif de carrière au Canada..."/>
         </S>
 
         <S label="Expériences professionnelles">
@@ -1781,9 +1823,28 @@ function GenerateurCV({user, isPremium}) {
                 {[["Poste / Titre","poste"],["Entreprise / Organisation","entreprise"],["Lieu (Ville, Pays)","lieu"]].map(([l,k])=>(
                   <div key={k}><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>{l}</label><input style={inp} value={exp[k]} onChange={e=>updArr("experiences",i,k,e.target.value)}/></div>
                 ))}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                  <div><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>Début</label><input style={inp} value={exp.debut} onChange={e=>updArr("experiences",i,"debut",e.target.value)} placeholder="Jan 2021"/></div>
-                  <div><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>Fin</label><input style={inp} value={exp.fin} onChange={e=>updArr("experiences",i,"fin",e.target.value)} placeholder="Aujourd'hui"/></div>
+                <div style={{gridColumn:"1/-1",display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
+                  <div>
+                    <label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>Début (MM/AAAA)</label>
+                    <div style={{display:"flex",gap:6}}>
+                      <select style={{...inp,flex:1}} value={exp.debutMois} onChange={e=>updArr("experiences",i,"debutMois",e.target.value)}>
+                        <option value="">Mois</option>
+                        {["01","02","03","04","05","06","07","08","09","10","11","12"].map(m=><option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <input style={{...inp,flex:"0 0 80px"}} value={exp.debutAnnee} onChange={e=>updArr("experiences",i,"debutAnnee",e.target.value)} placeholder="AAAA" maxLength={4}/>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>Fin (MM/AAAA ou vide = Aujourd'hui)</label>
+                    <div style={{display:"flex",gap:6}}>
+                      <select style={{...inp,flex:1}} value={exp.finMois} onChange={e=>updArr("experiences",i,"finMois",e.target.value)}>
+                        <option value="">Mois</option>
+                        {["01","02","03","04","05","06","07","08","09","10","11","12"].map(m=><option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <input style={{...inp,flex:"0 0 80px"}} value={exp.finAnnee} onChange={e=>updArr("experiences",i,"finAnnee",e.target.value)} placeholder="AAAA" maxLength={4}/>
+                    </div>
+                    <div style={{fontSize:9,color:GRAY,marginTop:3}}>Laisser vide = "Aujourd'hui"</div>
+                  </div>
                 </div>
               </div>
               <label style={{fontSize:10,color:GRAY,display:"block",marginBottom:4}}>Tâches / Réalisations</label>
@@ -1799,30 +1860,41 @@ function GenerateurCV({user, isPremium}) {
               </div>
             </div>
           ))}
-          <button onClick={()=>addArr("experiences",{poste:"",entreprise:"",lieu:"",debut:"",fin:"",taches:[""]})} className="btn btn-o btn-sm">+ Ajouter une expérience</button>
+          <button onClick={()=>addArr("experiences",{poste:"",entreprise:"",lieu:"",debutMois:"",debutAnnee:"",finMois:"",finAnnee:"",taches:[""]})} className="btn btn-o btn-sm">+ Ajouter une expérience</button>
         </S>
 
         <S label="Formation & Éducation">
           {form.formations.map((f,i)=>(
             <div key={i} style={{background:BG,borderRadius:10,padding:14,marginBottom:10,border:`1px solid ${BORDER}`}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
-                {[["Diplôme / Formation","diplome"],["Établissement","etablissement"],["Lieu","lieu"],["Année","annee"]].map(([l,k])=>(
-                  <div key={k}><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>{l}</label><input style={inp} value={f[k]} onChange={e=>updArr("formations",i,k,e.target.value)} placeholder={k==="annee"?"2020":""}/></div>
+                {[["Diplôme / Formation","diplome"],["Établissement","etablissement"],["Lieu","lieu"]].map(([l,k])=>(
+                  <div key={k}><label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>{l}</label><input style={inp} value={f[k]} onChange={e=>updArr("formations",i,k,e.target.value)}/></div>
                 ))}
+                <div>
+                  <label style={{fontSize:10,color:GRAY,display:"block",marginBottom:3}}>Date (MM/AAAA)</label>
+                  <div style={{display:"flex",gap:6}}>
+                    <select style={{...inp,flex:1}} value={f.mois} onChange={e=>updArr("formations",i,"mois",e.target.value)}>
+                      <option value="">Mois</option>
+                      {["01","02","03","04","05","06","07","08","09","10","11","12"].map(m=><option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <input style={{...inp,flex:"0 0 80px"}} value={f.annee} onChange={e=>updArr("formations",i,"annee",e.target.value)} placeholder="AAAA" maxLength={4}/>
+                  </div>
+                </div>
+              </div>
               </div>
               {form.formations.length>1&&<button onClick={()=>delArr("formations",i)} style={{marginTop:8,background:"rgba(220,38,38,0.07)",border:"1px solid rgba(220,38,38,0.2)",color:"#dc2626",borderRadius:7,padding:"4px 11px",cursor:"pointer",fontSize:11}}>🗑 Supprimer</button>}
             </div>
           ))}
-          <button onClick={()=>addArr("formations",{diplome:"",etablissement:"",lieu:"",annee:""})} className="btn btn-o btn-sm">+ Ajouter une formation</button>
+          <button onClick={()=>addArr("formations",{diplome:"",etablissement:"",lieu:"",mois:"",annee:""})} className="btn btn-o btn-sm">+ Ajouter une formation</button>
         </S>
 
         <S label="Certifications & Formation continue">
-          <textarea style={{...inp,minHeight:100,resize:"vertical"}} value={form.certifications} onChange={e=>upd("certifications",e.target.value)} placeholder={"TOT Montessori – Tunis – août 2025\nPremiers Secours pédiatriques – sept 2025\n..."}/>
+          <textarea style={{...inp,minHeight:100,resize:"vertical"}} value={form.certifications} onChange={e=>upd("certifications",e.target.value)} placeholder={"Titre de la certification – Organisme – MM/AAAA\nTitre de la certification – Organisme – MM/AAAA\n..."}/>
           <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une certification par ligne — elles seront listées avec • dans le CV</div>
         </S>
 
         <S label="Compétences">
-          <textarea style={{...inp,minHeight:80,resize:"vertical"}} value={form.competences} onChange={e=>upd("competences",e.target.value)} placeholder={"Leadership et gestion d'équipe\nPlanification pédagogique\nCommunication et écoute active\n..."}/>
+          <textarea style={{...inp,minHeight:80,resize:"vertical"}} value={form.competences} onChange={e=>upd("competences",e.target.value)} placeholder={"Votre compétence 1\nVotre compétence 2\nVotre compétence 3\n..."}/>
           <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une compétence par ligne</div>
         </S>
 
@@ -1928,7 +2000,7 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
     {id:"co",     icon:"🎧", label:"Comp. Orale"},
     {id:"ee",     icon:"✍️", label:"Expr. Écrite", soon:true},
     {id:"eo",     icon:"🗣️", label:"Expr. Orale",  soon:true},
-    {id:"cv",     icon:"📄", label:"Générateur CV", soon:true},
+    {id:"cv",     icon:"📄", label:"Générateur CV"},
     {id:"emploi", icon:"🤖", label:"Emploi IA",     soon:true},
     {id:"profil", icon:"👤", label:"Mon profil"},
   ];
@@ -2018,7 +2090,16 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
                   </div>
                 </div>
               ))}
-              {[{id:"ee",icon:"✍️",t:"Expression Écrite"},{id:"eo",icon:"🗣️",t:"Expression Orale"},{id:"cv",icon:"📄",t:"Générateur CV"},{id:"emploi",icon:"🤖",t:"Emploi IA"}].map((c,i)=>(
+              {/* CV — ACTIF */}
+              <div className="card card-h" onClick={()=>setTab("cv")} style={{padding:22,cursor:"pointer",position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:G}}/>
+                <div style={{width:40,height:40,borderRadius:10,background:"rgba(160,25,126,0.08)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,marginBottom:12}}>📄</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:4}}>Générateur CV</div>
+                <p style={{fontSize:12,color:GRAY,marginBottom:10}}>Modèle canadien · Bilingue FR/EN</p>
+                <span className="tag" style={{background:"rgba(5,150,105,0.1)",color:"#059669",fontSize:10}}>✅ Disponible</span>
+              </div>
+              {/* EE, EO, Emploi — Coming Soon */}
+              {[{id:"ee",icon:"✍️",t:"Expression Écrite"},{id:"eo",icon:"🗣️",t:"Expression Orale"},{id:"emploi",icon:"🤖",t:"Emploi IA"}].map((c,i)=>(
                 <div key={i} className="card" onClick={()=>setTab(c.id)} style={{padding:22,cursor:"pointer",opacity:.55,position:"relative"}}>
                   <div style={{position:"absolute",top:10,right:12,fontSize:9,fontWeight:700,background:"rgba(90,101,119,0.12)",color:GRAY,borderRadius:4,padding:"2px 6px",letterSpacing:.3}}>BIENTÔT</div>
                   <div style={{width:40,height:40,borderRadius:10,background:BG,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,marginBottom:12}}>{c.icon}</div>
