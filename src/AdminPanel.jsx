@@ -759,10 +759,10 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
               <AdminSerieBox list={ceSeries} typeKey="CE" typeLabel="Compréhension Écrite" icon="📖"
                 accentColor="#1a3a8f" accentBg="rgba(26,58,143,0.06)" accentBorder="rgba(26,58,143,0.15)"
-                setModal={setModal} onDelete={deleteSerieAdmin}/>
+                setModal={setModal} onDelete={deleteSerie}/>
               <AdminSerieBox list={coSeries} typeKey="CO" typeLabel="Compréhension Orale" icon="🎧"
                 accentColor="#c0186e" accentBg="rgba(192,24,110,0.05)" accentBorder="rgba(192,24,110,0.15)"
-                setModal={setModal} onDelete={deleteSerieAdmin}/>
+                setModal={setModal} onDelete={deleteSerie}/>
               <AdminSerieBoxSoon typeLabel="Expression Écrite" icon="✍️"
                 accentColor="#059669" accentBg="rgba(5,150,105,0.05)" accentBorder="rgba(5,150,105,0.15)"/>
               <AdminSerieBoxSoon typeLabel="Expression Orale" icon="🗣️"
