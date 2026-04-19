@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { G, BLUE, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, API, ADMIN_CREDS, apiPost } from "./constants.jsx";
+import { G, BLUE, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, API, ADMIN_CREDS, PAYS_LIST, apiPost } from "./constants.jsx";
 
 function LoginPage({onSuccess,onAdminLogin,onRegister,users,successMsg}) {
   const [email,setEmail]=useState(""); const [pwd,setPwd]=useState("");
