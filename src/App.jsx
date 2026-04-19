@@ -1095,6 +1095,11 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
   const questions = serie.questions || [];
   const q = questions[current];
 
+  // Log de diagnostic — à retirer après debug
+  useEffect(()=>{
+    console.log("[PC] ExamEngine monté →", serie.id, "| type:", serie.type, "| questions:", questions.length, "| q[0]:", questions[0]?.text?.substring(0,40));
+  },[]);
+
   // Timer
   useEffect(()=>{
     if(finished) return;
@@ -1188,14 +1193,27 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
   }
 
   if(!q) return (
-    <div style={{maxWidth:500,margin:"60px auto",padding:"0 24px",textAlign:"center"}}>
-      <div style={{fontSize:48,marginBottom:16}}>⚠️</div>
-      <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:900,color:DARK,marginBottom:8}}>Questions introuvables</h2>
-      <p style={{fontSize:13,color:GRAY,marginBottom:24}}>
-        Cette série ne contient pas de questions chargées correctement.<br/>
-        Vérifiez que le fichier JSON a bien été importé via l'admin.
-      </p>
-      <button className="btn btn-p" onClick={onAbort}>← Retour aux séries</button>
+    <div style={{maxWidth:600,margin:"40px auto",padding:"0 24px"}}>
+      <div style={{background:"#fff",border:"2px solid #f97316",borderRadius:16,padding:"32px",textAlign:"center"}}>
+        <div style={{fontSize:44,marginBottom:12}}>⚠️</div>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:900,color:DARK,marginBottom:16}}>
+          Diagnostic — Série reçue mais questions vides
+        </h2>
+        <div style={{background:"#fef3c7",borderRadius:10,padding:"16px",marginBottom:20,textAlign:"left",fontSize:12,fontFamily:"monospace",wordBreak:"break-all"}}>
+          <div><strong>serie.id :</strong> {serie.id || "undefined"}</div>
+          <div><strong>serie.type :</strong> {serie.type || "undefined"}</div>
+          <div><strong>serie.title :</strong> {serie.title || "undefined"}</div>
+          <div><strong>serie.questions :</strong> {JSON.stringify(serie.questions)?.substring(0,200) || "null/undefined"}</div>
+          <div><strong>questions.length :</strong> {questions.length}</div>
+          <div><strong>current :</strong> {current}</div>
+          <div><strong>q :</strong> {String(q)}</div>
+        </div>
+        <p style={{fontSize:13,color:GRAY,marginBottom:20}}>
+          Ce message confirme que ExamEngine reçoit bien la série mais les questions sont vides ou mal formatées.<br/>
+          Copiez ces infos et partagez-les pour identifier le problème.
+        </p>
+        <button className="btn btn-p" onClick={onAbort}>← Retour aux séries</button>
+      </div>
     </div>
   );
 
@@ -2060,17 +2078,23 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
 
   const startSerie = async (serie, type) => {
     setSerieError(null);
+    console.log("[PC] startSerie →", serie.id, "| questions:", serie.questions?.length, "| type:", serie.type || type);
+
     // Cas 1 : questions déjà en mémoire → on lance directement
     if(serie.questions && serie.questions.length > 0){
-      setActiveSerie({...serie, type: serie.type || type});
+      const s = {...serie, type: serie.type || type};
+      console.log("[PC] Cas 1 — questions en mémoire, setActiveSerie →", s.id, s.questions.length, "questions");
+      setActiveSerie(s);
       setExamType(type);
       return;
     }
     // Cas 2 : besoin de charger depuis le backend
+    console.log("[PC] Cas 2 — fetch /api/series/", serie.id);
     setSerieLoading(true);
     try {
       const full = await apiGet(`/api/series/${serie.id}`);
       setSerieLoading(false);
+      console.log("[PC] Réponse backend →", full?.id, "| questions:", full?.questions?.length, "| error:", full?.error);
       if(full && !full.error && Array.isArray(full.questions) && full.questions.length > 0){
         const enriched = {...full, type: full.type || type};
         setActiveSerie(enriched);
@@ -2094,6 +2118,7 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
       }
     } catch(e) {
       setSerieLoading(false);
+      console.error("[PC] Erreur startSerie:", e);
       setSerieError("Impossible de contacter le serveur. Vérifiez votre connexion.");
     }
   };
