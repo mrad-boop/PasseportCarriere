@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { G, BLUE, DARK, GRAY, BORDER, BG, CSS, Grad, Toast, PAYS_LIST, getPays, RANK_LABELS, API, apiGet, apiPost } from "./constants.jsx";
+import { G, BLUE, DARK, GRAY, BORDER, BG, CSS, Grad, Toast, Modal, PAYS_LIST, getPays, RANK_LABELS, API, apiGet, apiPost } from "./constants.jsx";
 import PaymentModal from "./PaymentModal.jsx";
 
 function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
