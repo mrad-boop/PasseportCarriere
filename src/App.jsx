@@ -1187,7 +1187,17 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
     );
   }
 
-  if(!q) return null;
+  if(!q) return (
+    <div style={{maxWidth:500,margin:"60px auto",padding:"0 24px",textAlign:"center"}}>
+      <div style={{fontSize:48,marginBottom:16}}>⚠️</div>
+      <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:900,color:DARK,marginBottom:8}}>Questions introuvables</h2>
+      <p style={{fontSize:13,color:GRAY,marginBottom:24}}>
+        Cette série ne contient pas de questions chargées correctement.<br/>
+        Vérifiez que le fichier JSON a bien été importé via l'admin.
+      </p>
+      <button className="btn btn-p" onClick={onAbort}>← Retour aux séries</button>
+    </div>
+  );
 
   const answered = Object.keys(answers).length;
   const isUrgent = timeLeft < 300;
@@ -2045,26 +2055,46 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
     });
   },[attempts,user.id]);
 
+  const [serieLoading, setSerieLoading] = useState(false);
+  const [serieError,   setSerieError]   = useState(null);
+
   const startSerie = async (serie, type) => {
-    // Si les questions sont déjà chargées, on utilise directement
+    setSerieError(null);
+    // Cas 1 : questions déjà en mémoire → on lance directement
     if(serie.questions && serie.questions.length > 0){
-      setActiveSerie(serie);
+      setActiveSerie({...serie, type: serie.type || type});
       setExamType(type);
       return;
     }
-    // Sinon on charge depuis le backend
+    // Cas 2 : besoin de charger depuis le backend
+    setSerieLoading(true);
     try {
       const full = await apiGet(`/api/series/${serie.id}`);
-      if(full && full.questions && full.questions.length > 0){
-        setActiveSerie(full);
+      setSerieLoading(false);
+      if(full && !full.error && Array.isArray(full.questions) && full.questions.length > 0){
+        const enriched = {...full, type: full.type || type};
+        setActiveSerie(enriched);
         setExamType(type);
-        // Mettre à jour le state local aussi
-        setSeries(prev=>prev.map(s=>s.id===serie.id?full:s));
+        setSeries(prev=>prev.map(s=>s.id===serie.id ? enriched : s));
+      } else if(full && full.error) {
+        setSerieError(full.error);
       } else {
-        alert("Impossible de charger les questions de cette série.");
+        // Tentative de rechargement global des séries puis retry
+        const all = await apiGet("/api/series");
+        if(Array.isArray(all) && all.length > 0){
+          setSeries(all);
+          const found = all.find(s=>s.id===serie.id);
+          if(found && found.questions && found.questions.length > 0){
+            setActiveSerie({...found, type: found.type || type});
+            setExamType(type);
+            return;
+          }
+        }
+        setSerieError("Les questions de cette série sont introuvables. Vérifiez l'import JSON.");
       }
     } catch(e) {
-      alert("Erreur réseau lors du chargement de la série.");
+      setSerieLoading(false);
+      setSerieError("Impossible de contacter le serveur. Vérifiez votre connexion.");
     }
   };
 
@@ -2089,6 +2119,31 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   ];
 
   // In exam mode
+  if(serieLoading) {
+    return (
+      <div style={{minHeight:"100vh",background:BG,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16,fontFamily:"'DM Sans',sans-serif"}}>
+        <style>{CSS}</style>
+        <div style={{width:44,height:44,border:`4px solid ${BORDER}`,borderTop:`4px solid ${BLUE}`,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+        <div style={{fontSize:14,color:GRAY}}>Chargement de la série…</div>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
+
+  if(serieError) {
+    return (
+      <div style={{minHeight:"100vh",background:BG,display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:"'DM Sans',sans-serif"}}>
+        <style>{CSS}</style>
+        <div style={{background:"#fff",border:`1.5px solid rgba(220,38,38,0.25)`,borderRadius:16,padding:"36px 32px",maxWidth:420,width:"100%",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.08)"}}>
+          <div style={{fontSize:44,marginBottom:14}}>❌</div>
+          <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:900,color:DARK,marginBottom:8}}>Impossible de lancer la série</h2>
+          <p style={{fontSize:13,color:GRAY,marginBottom:24,lineHeight:1.6}}>{serieError}</p>
+          <button className="btn btn-p" onClick={()=>setSerieError(null)}>← Retour aux séries</button>
+        </div>
+      </div>
+    );
+  }
+
   if(activeSerie) {
     return (
       <div style={{minHeight:"100vh",background:BG,fontFamily:"'DM Sans',sans-serif"}}>
@@ -3380,7 +3435,9 @@ export default function App() {
     resetInactivityTimer();
     // Démarrer le tracking de session
     apiPost("/api/users/session/start", {}).catch(()=>{});
-  }, [resetInactivityTimer]);
+    // Recharger les séries avec le token frais
+    apiGet("/api/series").then(d=>{ if(Array.isArray(d)&&d.length>0) setSeries(d); }).catch(()=>{});
+  }, [resetInactivityTimer, setSeries]);
 
   const loginAdmin = useCallback(() => {
     setScreen("admin");
