@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { G, BLUE, DARK, GRAY, BORDER, BG, CSS, Grad, Toast, Modal, PAYS_LIST, getPays, RANK_LABELS, API, apiGet, apiPost } from "./constants.jsx";
 import PaymentModal from "./PaymentModal.jsx";
 
