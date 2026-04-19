@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, Modal, Toast, ImageUpload, AudioUpload, RANK_LABELS, getPays, INIT_SITE_CONFIG, API, apiGet, apiPost, apiPut, formatTime, useToast } from "./constants.jsx";
+import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, Modal, Toast, ImageUpload, AudioUpload, RANK_LABELS, getPays, INIT_SITE_CONFIG, LS, API, apiGet, apiPost, apiPut, formatTime, useToast } from "./constants.jsx";
 
 function QuestionEditor({question,index,onChange,onRemove,type}) {
   const q = question;
@@ -999,6 +999,7 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
             {/* ── CONFIGURATION GÉNÉRALE ── */}
             <AdminSiteConfigEditor siteConfig={siteConfig} onSave={cfg=>{
               setSiteConfig(cfg);
+              LS.set("pc_site_config", cfg);
               apiPut("/api/packs/config", cfg).then(()=>showToast("Configuration sauvegardée !"));
             }}/>
             {/* ── 2 SERVICES COMING SOON ── */}

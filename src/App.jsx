@@ -67,16 +67,25 @@ export default function App() {
         setPacks(merged);
       }
     });
+    // Charger config depuis localStorage en premier (instantané)
+    const localCfg = LS.get("pc_site_config", null);
+    if(localCfg) setSiteConfig({...INIT_SITE_CONFIG,...localCfg});
+    const localAv = LS.get("pc_avantages", null);
+    if(localAv) setAvantages(localAv);
+    const localTm = LS.get("pc_testimonials", null);
+    if(localTm) setTestimonials(localTm);
+
     apiGet("/api/packs/config").then(d=>{
       if(d && typeof d==="object"){
         // siteConfig
         const cfg={...INIT_SITE_CONFIG};
         Object.keys(INIT_SITE_CONFIG).forEach(k=>{ if(d[k]) cfg[k]=d[k]; });
         setSiteConfig(cfg);
+        LS.set("pc_site_config", cfg);
         // avantages
-        if(d.avantages){ try{ setAvantages(JSON.parse(d.avantages)); }catch{} }
+        if(d.avantages){ try{ const av=JSON.parse(d.avantages); setAvantages(av); LS.set("pc_avantages",av); }catch{} }
         // testimonials
-        if(d.testimonials){ try{ setTestimonials(JSON.parse(d.testimonials)); }catch{} }
+        if(d.testimonials){ try{ const tm=JSON.parse(d.testimonials); setTestimonials(tm); LS.set("pc_testimonials",tm); }catch{} }
       }
     });
 
@@ -149,4 +158,3 @@ export default function App() {
     </>
   );
 }
-
