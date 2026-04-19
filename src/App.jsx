@@ -2848,6 +2848,69 @@ function AdminPacksEditor({packs,onSave}) {
 /* ═══════════════════════════════════════════════════════════════
    ADMIN PANEL
 ═══════════════════════════════════════════════════════════════ */
+/* ── AdminSerieBox : box d'un type de série dans l'admin ── */
+function AdminSerieBox({list, typeKey, typeLabel, icon, accentColor, accentBg, accentBorder, setModal, onDelete}) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div style={{background:"#fff",border:`2px solid ${accentBorder}`,borderRadius:16,overflow:"hidden",boxShadow:`0 4px 20px ${accentBg}`}}>
+      <div style={{background:accentBg,padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1.5px solid ${accentBorder}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:36,height:36,borderRadius:10,background:accentBorder,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{icon}</div>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:800,color:accentColor}}>{typeLabel}</div>
+            <div style={{fontSize:11,color:"#5a6577",marginTop:1}}>{list.length} séries · {list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          <button className="btn btn-p btn-sm" style={{fontSize:11}} onClick={()=>setModal({type:"create",serieType:typeKey})}>+ Ajouter</button>
+          <button onClick={()=>setOpen(o=>!o)} style={{width:28,height:28,border:`1.5px solid ${accentBorder}`,borderRadius:7,background:"#fff",cursor:"pointer",fontSize:13,color:accentColor,display:"flex",alignItems:"center",justifyContent:"center"}}>{open?"▲":"▼"}</button>
+        </div>
+      </div>
+      {open&&(
+        <div style={{maxHeight:320,overflowY:"auto",padding:"10px 14px",display:"flex",flexDirection:"column",gap:6}}>
+          {list.length===0?(
+            <div style={{textAlign:"center",padding:20,color:"#5a6577",fontSize:12}}>Aucune série {typeKey}. Cliquez sur + Ajouter.</div>
+          ):list.map((s,i)=>(
+            <div key={s.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:"#f6f8fc",borderRadius:8,border:"1px solid #e4e8f0"}}>
+              <div style={{width:24,height:24,borderRadius:6,background:accentBorder,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:accentColor,flexShrink:0}}>{i+1}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:12,fontWeight:600,color:"#0f1827",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</div>
+                <div style={{fontSize:10,color:"#5a6577"}}>{s.questions?.length||0} q · {s.premium?"⭐ Premium":"Free"}</div>
+              </div>
+              <div style={{display:"flex",gap:4,flexShrink:0}}>
+                <button onClick={()=>setModal({type:"edit",serie:s,serieType:typeKey})} style={{padding:"3px 8px",border:"1px solid #e4e8f0",borderRadius:5,background:"#fff",fontSize:10,cursor:"pointer",color:"#5a6577"}}>✏️</button>
+                <button onClick={()=>onDelete(s.id)} style={{padding:"3px 8px",border:"1px solid rgba(220,38,38,0.2)",borderRadius:5,background:"rgba(220,38,38,0.04)",fontSize:10,cursor:"pointer",color:"#dc2626"}}>🗑</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── AdminSerieBoxSoon : box "bientôt" ── */
+function AdminSerieBoxSoon({typeLabel, icon, accentColor, accentBg, accentBorder}) {
+  return (
+    <div style={{background:"#fff",border:`2px solid ${accentBorder}`,borderRadius:16,overflow:"hidden",boxShadow:`0 4px 20px ${accentBg}`,opacity:0.8}}>
+      <div style={{background:accentBg,padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1.5px solid ${accentBorder}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:36,height:36,borderRadius:10,background:accentBorder,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{icon}</div>
+          <div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:800,color:accentColor}}>{typeLabel}</div>
+            <div style={{fontSize:11,color:"#5a6577",marginTop:1}}>0 séries · Bientôt disponible</div>
+          </div>
+        </div>
+        <span style={{fontSize:10,fontWeight:700,background:accentBorder,color:accentColor,padding:"4px 10px",borderRadius:20}}>🚀 Bientôt</span>
+      </div>
+      <div style={{padding:"28px 18px",textAlign:"center",color:"#5a6577",fontSize:12}}>
+        Module {typeLabel} — disponible prochainement
+      </div>
+    </div>
+  );
+}
+
+
 function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,packs,setPacks,avantages,setAvantages,testimonials,setTestimonials,onLogout}) {
   const [tab,  setTab]   = useState("dashboard");
   const [modal,setModal] = useState(null);
@@ -3055,144 +3118,28 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
               <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:DARK,marginBottom:3}}>Gestion des Séries</h1>
               <p style={{fontSize:13,color:GRAY}}>Organisez les séries TCF Canada par type · {series.length} séries au total</p>
             </div>
-
-            {/* 4 boxes en grille 2×2 */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
-
-              {/* ── CE ── */}
-              {(()=>{
-                const list = ceSeries;
-                const [open,setOpen] = React.useState(true);
-                return (
-                  <div style={{background:"#fff",border:`2px solid rgba(26,58,143,0.2)`,borderRadius:16,overflow:"hidden",boxShadow:"0 4px 20px rgba(26,58,143,0.08)"}}>
-                    {/* Header box */}
-                    <div style={{background:"rgba(26,58,143,0.06)",padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1.5px solid rgba(26,58,143,0.12)`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(26,58,143,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📖</div>
-                        <div>
-                          <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:800,color:"#1a3a8f"}}>Compréhension Écrite</div>
-                          <div style={{fontSize:11,color:GRAY,marginTop:1}}>{list.length} séries · {list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</div>
-                        </div>
-                      </div>
-                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <button className="btn btn-p btn-sm" style={{fontSize:11}} onClick={()=>setModal({type:"create",serieType:"CE"})}>+ Ajouter</button>
-                        <button onClick={()=>setOpen(o=>!o)} style={{width:28,height:28,border:`1.5px solid rgba(26,58,143,0.2)`,borderRadius:7,background:"#fff",cursor:"pointer",fontSize:13,color:"#1a3a8f",display:"flex",alignItems:"center",justifyContent:"center"}}>{open?"▲":"▼"}</button>
-                      </div>
-                    </div>
-                    {/* Corps */}
-                    {open&&(
-                      <div style={{maxHeight:320,overflowY:"auto",padding:"10px 14px",display:"flex",flexDirection:"column",gap:6}}>
-                        {list.length===0?(
-                          <div style={{textAlign:"center",padding:20,color:GRAY,fontSize:12}}>Aucune série CE. Cliquez sur + Ajouter.</div>
-                        ):list.map((s,i)=>(
-                          <div key={s.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:BG,borderRadius:8,border:`1px solid ${BORDER}`}}>
-                            <div style={{width:24,height:24,borderRadius:6,background:"rgba(26,58,143,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#1a3a8f",flexShrink:0}}>{i+1}</div>
-                            <div style={{flex:1,minWidth:0}}>
-                              <div style={{fontSize:12,fontWeight:600,color:DARK,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</div>
-                              <div style={{fontSize:10,color:GRAY}}>{s.questions?.length||0} q · {s.premium?"⭐ Premium":"Free"}</div>
-                            </div>
-                            <div style={{display:"flex",gap:4,flexShrink:0}}>
-                              <button onClick={()=>setModal({type:"edit",serie:s,serieType:"CE"})} style={{padding:"3px 8px",border:`1px solid ${BORDER}`,borderRadius:5,background:"#fff",fontSize:10,cursor:"pointer",color:GRAY}}>✏️</button>
-                              <button onClick={()=>setModal({type:"delete",serie:s})} style={{padding:"3px 8px",border:"1px solid rgba(220,38,38,0.2)",borderRadius:5,background:"rgba(220,38,38,0.04)",fontSize:10,cursor:"pointer",color:"#dc2626"}}>🗑</button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* ── CO ── */}
-              {(()=>{
-                const list = coSeries;
-                const [open,setOpen] = React.useState(true);
-                return (
-                  <div style={{background:"#fff",border:`2px solid rgba(192,24,110,0.2)`,borderRadius:16,overflow:"hidden",boxShadow:"0 4px 20px rgba(192,24,110,0.08)"}}>
-                    <div style={{background:"rgba(192,24,110,0.05)",padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1.5px solid rgba(192,24,110,0.12)`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(192,24,110,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🎧</div>
-                        <div>
-                          <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:800,color:"#c0186e"}}>Compréhension Orale</div>
-                          <div style={{fontSize:11,color:GRAY,marginTop:1}}>{list.length} séries · {list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</div>
-                        </div>
-                      </div>
-                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <button className="btn btn-p btn-sm" style={{fontSize:11}} onClick={()=>setModal({type:"create",serieType:"CO"})}>+ Ajouter</button>
-                        <button onClick={()=>setOpen(o=>!o)} style={{width:28,height:28,border:`1.5px solid rgba(192,24,110,0.2)`,borderRadius:7,background:"#fff",cursor:"pointer",fontSize:13,color:"#c0186e",display:"flex",alignItems:"center",justifyContent:"center"}}>{open?"▲":"▼"}</button>
-                      </div>
-                    </div>
-                    {open&&(
-                      <div style={{maxHeight:320,overflowY:"auto",padding:"10px 14px",display:"flex",flexDirection:"column",gap:6}}>
-                        {list.length===0?(
-                          <div style={{textAlign:"center",padding:20,color:GRAY,fontSize:12}}>Aucune série CO. Cliquez sur + Ajouter.</div>
-                        ):list.map((s,i)=>(
-                          <div key={s.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:BG,borderRadius:8,border:`1px solid ${BORDER}`}}>
-                            <div style={{width:24,height:24,borderRadius:6,background:"rgba(192,24,110,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"#c0186e",flexShrink:0}}>{i+1}</div>
-                            <div style={{flex:1,minWidth:0}}>
-                              <div style={{fontSize:12,fontWeight:600,color:DARK,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</div>
-                              <div style={{fontSize:10,color:GRAY}}>{s.questions?.length||0} q · {s.premium?"⭐ Premium":"Free"}</div>
-                            </div>
-                            <div style={{display:"flex",gap:4,flexShrink:0}}>
-                              <button onClick={()=>setModal({type:"edit",serie:s,serieType:"CO"})} style={{padding:"3px 8px",border:`1px solid ${BORDER}`,borderRadius:5,background:"#fff",fontSize:10,cursor:"pointer",color:GRAY}}>✏️</button>
-                              <button onClick={()=>setModal({type:"delete",serie:s})} style={{padding:"3px 8px",border:"1px solid rgba(220,38,38,0.2)",borderRadius:5,background:"rgba(220,38,38,0.04)",fontSize:10,cursor:"pointer",color:"#dc2626"}}>🗑</button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              {/* ── EE ── */}
-              {(()=>{
-                const [open,setOpen] = React.useState(false);
-                return (
-                  <div style={{background:"#fff",border:`2px solid rgba(5,150,105,0.2)`,borderRadius:16,overflow:"hidden",boxShadow:"0 4px 20px rgba(5,150,105,0.06)"}}>
-                    <div style={{background:"rgba(5,150,105,0.05)",padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1.5px solid rgba(5,150,105,0.12)`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(5,150,105,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>✍️</div>
-                        <div>
-                          <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:800,color:"#059669"}}>Expression Écrite</div>
-                          <div style={{fontSize:11,color:GRAY,marginTop:1}}>0 séries · Bientôt disponible</div>
-                        </div>
-                      </div>
-                      <span style={{fontSize:10,fontWeight:700,background:"rgba(5,150,105,0.1)",color:"#059669",padding:"4px 10px",borderRadius:20}}>🚀 Bientôt</span>
-                    </div>
-                    <div style={{padding:"28px 18px",textAlign:"center",color:GRAY,fontSize:12}}>
-                      Module Expression Écrite — disponible prochainement
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* ── EO ── */}
-              {(()=>{
-                const [open,setOpen] = React.useState(false);
-                return (
-                  <div style={{background:"#fff",border:`2px solid rgba(217,119,6,0.2)`,borderRadius:16,overflow:"hidden",boxShadow:"0 4px 20px rgba(217,119,6,0.06)"}}>
-                    <div style={{background:"rgba(217,119,6,0.05)",padding:"14px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1.5px solid rgba(217,119,6,0.12)`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <div style={{width:36,height:36,borderRadius:10,background:"rgba(217,119,6,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🗣️</div>
-                        <div>
-                          <div style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:800,color:"#d97706"}}>Expression Orale</div>
-                          <div style={{fontSize:11,color:GRAY,marginTop:1}}>0 séries · Bientôt disponible</div>
-                        </div>
-                      </div>
-                      <span style={{fontSize:10,fontWeight:700,background:"rgba(217,119,6,0.1)",color:"#d97706",padding:"4px 10px",borderRadius:20}}>🚀 Bientôt</span>
-                    </div>
-                    <div style={{padding:"28px 18px",textAlign:"center",color:GRAY,fontSize:12}}>
-                      Module Expression Orale — disponible prochainement
-                    </div>
-                  </div>
-                );
-              })()}
-
+              <AdminSerieBox
+                list={ceSeries} typeKey="CE" typeLabel="Compréhension Écrite" icon="📖"
+                accentColor="#1a3a8f" accentBg="rgba(26,58,143,0.06)" accentBorder="rgba(26,58,143,0.15)"
+                setModal={setModal} onDelete={deleteSerieAdmin}
+              />
+              <AdminSerieBox
+                list={coSeries} typeKey="CO" typeLabel="Compréhension Orale" icon="🎧"
+                accentColor="#c0186e" accentBg="rgba(192,24,110,0.05)" accentBorder="rgba(192,24,110,0.15)"
+                setModal={setModal} onDelete={deleteSerieAdmin}
+              />
+              <AdminSerieBoxSoon
+                typeLabel="Expression Écrite" icon="✍️"
+                accentColor="#059669" accentBg="rgba(5,150,105,0.05)" accentBorder="rgba(5,150,105,0.15)"
+              />
+              <AdminSerieBoxSoon
+                typeLabel="Expression Orale" icon="🗣️"
+                accentColor="#d97706" accentBg="rgba(217,119,6,0.05)" accentBorder="rgba(217,119,6,0.15)"
+              />
             </div>
           </div>
         )}
-
         {/* USERS */}
         {tab==="users"&&(
           <div style={{padding:"24px 16px"}}>
