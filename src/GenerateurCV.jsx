@@ -1,6 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { G, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, CV_QUOTAS, RANK_LABELS, API, apiGet, apiPost } from "./constants.jsx";
 
+const CV_DEFAULT = {
+  prenom:"", nom:"", adresse:"", telephone:"", email:"", titre:"", resume:"",
+  experiences: [{ poste:"", entreprise:"", lieu:"", debutMois:"", debutAnnee:"", finMois:"", finAnnee:"", taches:[""] }],
+  formations:  [{ diplome:"", etablissement:"", lieu:"", mois:"", annee:"" }],
+  competences:"", certifications:"",
+  langues: [{ langue:"", niveau:"" }],
+  references:"",
+};
+
+
 function CvS({label,children}) {
   return (
     <div style={{marginBottom:20}}>
