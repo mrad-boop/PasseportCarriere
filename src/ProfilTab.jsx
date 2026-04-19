@@ -37,12 +37,7 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const initials = form.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase()||"?";
 
   // Composant input local — nommé PF pour éviter conflit avec Field global
-  const PF = ({label,k,type="text",placeholder}) => (
-    <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
-      <input className="inp" type={type} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={placeholder||label}/>
-    </div>
-  );
+
 
   return (
     <div style={{maxWidth:680,margin:"0 auto",padding:"32px"}}>
@@ -102,10 +97,10 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
       <div className="card" style={{padding:24,marginBottom:14}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:16}}>Informations personnelles</h3>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Nom et Prénom" k="nom" placeholder="Votre nom complet"/>
-          <PF label="Adresse email" k="email" type="email" placeholder="votre@email.com"/>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Nom et Prénom</label><input className="inp" value={form.nom||""} onChange={e=>upd("nom",e.target.value)} placeholder="Votre nom complet"/></div>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Adresse email</label><input className="inp" type="email" value={form.email||""} onChange={e=>upd("email",e.target.value)} placeholder="votre@email.com"/></div>
         </div>
-        <PF label="Adresse / Ville" k="adresse" placeholder="Ville, Province, Canada"/>
+        <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Adresse / Ville</label><input className="inp" value={form.adresse||""} onChange={e=>upd("adresse",e.target.value)} placeholder="Ville, Province, Canada"/></div>
         <div style={{marginBottom:14}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Pays de résidence</label>
           <select className="inp" value={form.pays} onChange={e=>upd("pays",e.target.value)}>
@@ -113,8 +108,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
           </select>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Téléphone" k="tel" placeholder="+1 514 000-0000"/>
-          <PF label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000"/>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Téléphone</label><input className="inp" value={form.tel||""} onChange={e=>upd("tel",e.target.value)} placeholder="+1 514 000-0000"/></div>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>WhatsApp</label><input className="inp" value={form.whatsapp||""} onChange={e=>upd("whatsapp",e.target.value)} placeholder="+1 514 000-0000"/></div>
         </div>
       </div>
 
