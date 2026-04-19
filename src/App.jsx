@@ -1083,57 +1083,59 @@ function SeriesList({type,series,isPremium,attempts,onStart}) {
    EXAM ENGINE
 ═══════════════════════════════════════════════════════════════ */
 function ExamEngine({serie,isPremium,onFinish,onAbort}) {
-  const timeLimit   = serie.type==="CE"?60*60:35*60;
-  const [current,    setCurrent]    = useState(0);
-  const [answers,    setAnswers]    = useState({});
-  const [timeLeft,   setTimeLeft]   = useState(timeLimit);
-  const [finished,   setFinished]   = useState(false);
-  const [showResults,setShowResults]= useState(false);
-  const [showDetail, setShowDetail] = useState(false);
-  const audioRef    = useRef(null);
-  const answersRef  = useRef({});
-  const finishedRef = useRef(false);
+  const timeLimit = serie.type==="CE"?60*60:35*60; // seconds
+  const [current,setCurrent]  = useState(0);
+  const [answers, setAnswers]  = useState({});
+  const [timeLeft,setTimeLeft] = useState(timeLimit);
+  const [finished,setFinished] = useState(false);
+  const [showResults,setShowResults] = useState(false);
+  const [showDetail,setShowDetail] = useState(false);
+  const audioRef = useRef(null);
 
   const questions = serie.questions || [];
-  const q         = questions[current];
+  const q = questions[current];
 
-  /* handleFinish DÉFINI EN PREMIER */
-  const handleFinish = useCallback((ans) => {
-    if (finishedRef.current) return;
-    finishedRef.current = true;
-    const finalAns = (ans !== undefined && ans !== null) ? ans : answersRef.current;
+  // handleFinish DÉFINI EN PREMIER (avant le timer qui l'utilise)
+  const answersRef = useRef({});
+  useEffect(()=>{ answersRef.current = answers; },[answers]);
+
+  const handleFinish = useCallback(()=>{
+    const ans = answersRef.current;
     setFinished(true);
-    const res = calcScore(finalAns, questions);
-    onFinish(serie.id, res, finalAns);
+    const res = calcScore(ans, questions);
+    onFinish(serie.id, res, ans);
     setShowResults(true);
-  }, [questions, serie.id, onFinish]);
+  },[questions, serie.id, onFinish]);
 
   const handleFinishRef = useRef(handleFinish);
   useEffect(()=>{ handleFinishRef.current = handleFinish; },[handleFinish]);
-  useEffect(()=>{ answersRef.current = answers; },[answers]);
 
-  /* Timer */
+  // Timer
   useEffect(()=>{
     if(finished) return;
-    const t = setInterval(()=>{
-      setTimeLeft(tl=>{
-        if(tl<=1){ clearInterval(t); handleFinishRef.current(); return 0; }
-        return tl-1;
-      });
-    },1000);
+    const t = setInterval(()=>setTimeLeft(tl=>{
+      if(tl<=1){ clearInterval(t); handleFinishRef.current(); return 0; }
+      return tl-1;
+    }),1000);
     return ()=>clearInterval(t);
   },[finished]);
 
-  /* Audio CO */
-  useEffect(()=>{
-    if(serie.type==="CO"&&serie.audioUrl&&audioRef.current)
-      audioRef.current.src = serie.audioUrl;
-  },[serie]);
+  const formatTime = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+  const pct = Math.round(timeLeft/timeLimit*100);
 
-  const formatTime = s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
-  const pct    = Math.round(timeLeft/timeLimit*100);
-  const select = idx=>{ if(!finished) setAnswers(a=>({...a,[current]:idx})); };
+  const select = idx => {
+    if(finished) return;
+    setAnswers(a=>({...a,[current]:idx}));
+  };
+
   const result = finished ? calcScore(answers,questions) : null;
+
+  // Audio for CO
+  useEffect(()=>{
+    if(serie.type==="CO"&&serie.audioUrl&&audioRef.current) {
+      audioRef.current.src = serie.audioUrl;
+    }
+  },[serie]);
 
   if(showResults && result) {
     return (
@@ -1454,16 +1456,6 @@ function PaymentModal({onClose}) {
 /* ═══════════════════════════════════════════════════════════════
    PROFIL TAB — Editable
 ═══════════════════════════════════════════════════════════════ */
-/* ── PF: champ profil (global) ── */
-function PF({label,k,type="text",placeholder,form,upd}) {
-  return (
-    <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
-      <input className="inp" type={type} value={form[k]||""} onChange={e=>upd(k,e.target.value)} placeholder={placeholder||label}/>
-    </div>
-  );
-}
-
 function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const [form,setForm]   = useState({
     nom:    user.nom||"",
@@ -1498,7 +1490,7 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const paysInfo = getPays(form.pays);
   const initials = form.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase()||"?";
 
-  // Composant input local — nommé PF pour éviter conflit avec Field global
+
 
   return (
     <div style={{maxWidth:680,margin:"0 auto",padding:"32px"}}>
@@ -1558,10 +1550,10 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
       <div className="card" style={{padding:24,marginBottom:14}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:16}}>Informations personnelles</h3>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Nom et Prénom" k="nom" placeholder="Votre nom complet" form={form} upd={upd}/>
-          <PF label="Adresse email" k="email" type="email" placeholder="votre@email.com" form={form} upd={upd}/>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Nom et Prénom</label><input className="inp" value={form.nom||""} onChange={e=>upd("nom",e.target.value)} placeholder="Votre nom complet"/></div>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Adresse email</label><input className="inp" type="email" value={form.email||""} onChange={e=>upd("email",e.target.value)} placeholder="votre@email.com"/></div>
         </div>
-        <PF label="Adresse / Ville" k="adresse" placeholder="Ville, Province, Canada" form={form} upd={upd}/>
+        <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Adresse / Ville</label><input className="inp" value={form.adresse||""} onChange={e=>upd("adresse",e.target.value)} placeholder="Ville, Province, Canada"/></div>
         <div style={{marginBottom:14}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Pays de résidence</label>
           <select className="inp" value={form.pays} onChange={e=>upd("pays",e.target.value)}>
@@ -1569,8 +1561,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
           </select>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Téléphone" k="tel" placeholder="+1 514 000-0000" form={form} upd={upd}/>
-          <PF label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000" form={form} upd={upd}/>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Téléphone</label><input className="inp" value={form.tel||""} onChange={e=>upd("tel",e.target.value)} placeholder="+1 514 000-0000"/></div>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>WhatsApp</label><input className="inp" value={form.whatsapp||""} onChange={e=>upd("whatsapp",e.target.value)} placeholder="+1 514 000-0000"/></div>
         </div>
       </div>
 
@@ -2837,25 +2829,21 @@ function AdminPacksEditor({packs,onSave}) {
 /* ═══════════════════════════════════════════════════════════════
    ADMIN PANEL
 ═══════════════════════════════════════════════════════════════ */
-/* ── SeriesTable: liste séries (global) ── */
 function SeriesTable({list,typeLabel,typeKey,setModal,onDelete}) {
   return (
     <div style={{marginBottom:32}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
         <div>
-          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK}}>
-            {typeKey==="CE"?"📖":"🎧"} {typeLabel}{" "}
-            <span style={{fontSize:14,color:GRAY,fontWeight:400}}>({list.length}/40)</span>
-          </h3>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK}}>{typeKey==="CE"?"📖":"🎧"} {typeLabel} <span style={{fontSize:14,color:GRAY,fontWeight:400}}>({list.length}/40)</span></h3>
           <p style={{fontSize:12,color:GRAY}}>{list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</p>
         </div>
         <button className="btn btn-p btn-sm" onClick={()=>setModal({type:"create",serieType:typeKey})}>+ Nouvelle série</button>
       </div>
-      {list.length===0?(
+      {list.length===0 ? (
         <div style={{textAlign:"center",padding:"28px",background:"#fff",border:`1.5px dashed ${BORDER}`,borderRadius:12,color:GRAY,fontSize:13}}>
-          Aucune série. Cliquez sur &quot;+ Nouvelle série&quot; pour commencer.
+          Aucune série. Cliquez sur "+ Nouvelle série" pour commencer.
         </div>
-      ):(
+      ) : (
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {list.map((s,i)=>(
             <div key={s.id} style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:11,padding:"13px 16px",display:"flex",alignItems:"center",gap:12}}>
@@ -2863,13 +2851,13 @@ function SeriesTable({list,typeLabel,typeKey,setModal,onDelete}) {
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
                   <span style={{fontSize:13,fontWeight:600,color:DARK,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</span>
-                  <span className="tag" style={{background:s.premium?G:"rgba(5,150,105,0.1)",color:s.premium?"#fff":"#059669",fontSize:9}}>{s.premium?"⭐ Premium":"Gratuit"}</span>
+                  <span className="tag" style={{background:s.premium?G:"rgba(5,150,105,0.1)",color:s.premium?"#fff":"#059669",fontSize:9,flexShrink:0}}>{s.premium?"⭐ Premium":"Gratuit"}</span>
                 </div>
-                <div style={{fontSize:11,color:GRAY}}>{s.questions?.length||0} questions · {typeKey==="CE"?"60 min":"35 min"} · 699 pts{s.audioUrl?" · 🎧 Audio":""}</div>
+                <div style={{fontSize:11,color:GRAY}}>{s.questions?.length||0} questions · {typeKey==="CE"?"60 min":"35 min"} · 699 pts{s.audioUrl?" · 🎧 Audio":"" }</div>
               </div>
               <div style={{display:"flex",gap:6,flexShrink:0}}>
                 <button onClick={()=>setModal({type:"edit",serie:s,serieType:typeKey})} style={{padding:"5px 10px",border:`1.5px solid ${BORDER}`,borderRadius:7,background:"#fff",fontSize:11,cursor:"pointer",color:GRAY,fontFamily:"'DM Sans',sans-serif"}}>✏️ Modifier</button>
-                <button onClick={()=>onDelete(s.id)} style={{padding:"5px 10px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
+                <button onClick={()=>setModal({type:"delete",serie:s})} style={{padding:"5px 10px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
               </div>
             </div>
           ))}
