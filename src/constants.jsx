@@ -458,5 +458,5 @@ export { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, LANDING_CSS,
   TRANCHES, calcScore, LS, API, ADMIN_CREDS, INIT_USERS, PAYS_LIST, getPays,
   SAMPLE_CE, SAMPLE_CO, Grad, Spinner, Modal, Toast, ImageUpload, AudioUpload,
   CV_QUOTAS, RANK_LABELS, INIT_PACKS, INIT_AVANTAGES, INIT_TESTIMONIALS, INIT_SITE_CONFIG,
-  apiGet, apiPost, formatTime, useToast
+  apiGet, apiPost, apiPut, formatTime, useToast
 };
