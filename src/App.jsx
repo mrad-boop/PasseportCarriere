@@ -1203,10 +1203,10 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
   const isUrgent = timeLeft < 300;
 
   return (
-    <div className="exam-layout" style={{display:"flex",height:"calc(100vh - 58px)",fontFamily:"'DM Sans',sans-serif",overflow:"hidden"}}>
+    <div className="exam-layout" style={{display:"flex",minHeight:"calc(100vh - 58px)",fontFamily:"'DM Sans',sans-serif"}}>
 
       {/* ── GAUCHE : Zone question ── */}
-      <div className="exam-content" style={{flex:1,overflowY:"auto",padding:"28px 32px",background:BG}}>
+      <div className="exam-content" style={{flex:1,padding:"28px 32px",background:BG}}>
 
         {/* Audio CO */}
         {serie.type==="CO"&&serie.audioUrl&&(
@@ -2122,10 +2122,8 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   if(serieLoading) {
     return (
       <div style={{minHeight:"100vh",background:BG,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:16,fontFamily:"'DM Sans',sans-serif"}}>
-        <style>{CSS}</style>
         <div style={{width:44,height:44,border:`4px solid ${BORDER}`,borderTop:`4px solid ${BLUE}`,borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
         <div style={{fontSize:14,color:GRAY}}>Chargement de la série…</div>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
   }
@@ -2133,7 +2131,6 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   if(serieError) {
     return (
       <div style={{minHeight:"100vh",background:BG,display:"flex",alignItems:"center",justifyContent:"center",padding:24,fontFamily:"'DM Sans',sans-serif"}}>
-        <style>{CSS}</style>
         <div style={{background:"#fff",border:`1.5px solid rgba(220,38,38,0.25)`,borderRadius:16,padding:"36px 32px",maxWidth:420,width:"100%",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.08)"}}>
           <div style={{fontSize:44,marginBottom:14}}>❌</div>
           <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:900,color:DARK,marginBottom:8}}>Impossible de lancer la série</h2>
@@ -2147,7 +2144,6 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   if(activeSerie) {
     return (
       <div style={{minHeight:"100vh",background:BG,fontFamily:"'DM Sans',sans-serif"}}>
-        <style>{CSS}</style>
         <div style={{background:DARK,height:58,display:"flex",alignItems:"center",padding:"0 24px",borderBottom:"1px solid rgba(255,255,255,0.07)",position:"sticky",top:0,zIndex:50}}>
           <div style={{width:26,height:26,borderRadius:7,background:G,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",marginRight:10}}>PC</div>
           <span style={{fontFamily:"'Playfair Display',serif",fontSize:14,fontWeight:700,color:"#fff"}}>Passeport Carrière &nbsp;—&nbsp;</span>
@@ -2160,7 +2156,6 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
 
   return (
     <div style={{minHeight:"100vh",display:"flex",fontFamily:"'DM Sans',sans-serif"}}>
-      <style>{CSS}</style>
 
       {/* SIDEBAR — desktop */}
       <aside className="sidebar-desktop" style={{width:220,background:DARK,display:"flex",flexDirection:"column",borderRight:"1px solid rgba(255,255,255,0.06)",flexShrink:0,position:"sticky",top:0,height:"100vh",overflowY:"auto"}}>
@@ -2921,7 +2916,6 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
 
   return (
     <div style={{minHeight:"100vh",display:"flex",fontFamily:"'DM Sans',sans-serif"}}>
-      <style>{CSS}</style>
       {toast&&<Toast {...toast}/>}
 
       {/* SIDEBAR — desktop only */}
@@ -3339,6 +3333,17 @@ export default function App() {
   const [testimonials,setTestimonials]= useState(INIT_TESTIMONIALS);
   const [registerSuccess, setRegisterSuccess] = useState(false);
 
+  // Injecter le CSS global dans <head> une seule fois, garanti disponible partout
+  useEffect(() => {
+    const id = "pc-global-styles";
+    if (!document.getElementById(id)) {
+      const el = document.createElement("style");
+      el.id = id;
+      el.textContent = CSS;
+      document.head.appendChild(el);
+    }
+  }, []);
+
   const token = () => localStorage.getItem("pc_token");
   const INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
   const inactivityTimer = useRef(null);
@@ -3453,7 +3458,6 @@ export default function App() {
 
   return (
     <>
-      <style>{CSS}</style>
       {screen==="landing"  && <LandingPage  onLogin={()=>setScreen("login")} onRegister={()=>setScreen("register")} siteConfig={siteConfig} packs={packs} avantages={avantages} testimonials={testimonials} registerSuccess={registerSuccess} onCloseSuccess={()=>setRegisterSuccess(false)}/>}
       {screen==="login"    && <LoginPage    users={users} onSuccess={loginUser} onAdminLogin={loginAdmin} onRegister={()=>setScreen("register")}/>}
       {screen==="register" && <RegisterPage users={users} setUsers={setUsers} onSuccess={()=>{setRegisterSuccess(true);setScreen("landing");}} onLogin={()=>setScreen("login")}/>}
