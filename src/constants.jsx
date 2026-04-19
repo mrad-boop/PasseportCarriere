@@ -452,11 +452,6 @@ const INIT_SITE_CONFIG = {
 };
 
 
-const useToast = () => {
-  const [toast,setToast] = useState(null);
-  const show = useCallback((msg,type="success")=>{ setToast({msg,type}); setTimeout(()=>setToast(null),3200); },[]);
-  return [toast,show];
-};
 
 
 export { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, LANDING_CSS,
