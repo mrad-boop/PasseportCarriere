@@ -452,9 +452,16 @@ const INIT_SITE_CONFIG = {
 };
 
 
+const useToast = () => {
+  const [toast,setToast] = useState(null);
+  const show = useCallback((msg,type="success")=>{ setToast({msg,type}); setTimeout(()=>setToast(null),3200); },[]);
+  return [toast,show];
+};
+
+
 export { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, LANDING_CSS,
   TRANCHES, calcScore, LS, API, ADMIN_CREDS, INIT_USERS, PAYS_LIST, getPays,
   SAMPLE_CE, SAMPLE_CO, Grad, Spinner, Modal, Toast, ImageUpload, AudioUpload,
   CV_QUOTAS, RANK_LABELS, INIT_PACKS, INIT_AVANTAGES, INIT_TESTIMONIALS, INIT_SITE_CONFIG,
-  apiGet, apiPost, formatTime
+  apiGet, apiPost, formatTime, useToast
 };
