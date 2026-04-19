@@ -1095,15 +1095,26 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
   const questions = serie.questions || [];
   const q = questions[current];
 
-  // Log de diagnostic — à retirer après debug
-  useEffect(()=>{
-    console.log("[PC] ExamEngine monté →", serie.id, "| type:", serie.type, "| questions:", questions.length, "| q[0]:", questions[0]?.text?.substring(0,40));
-  },[]);
+  const answersRef = useRef({});
+  useEffect(()=>{ answersRef.current = answers; },[answers]);
 
-  // Timer
+  const handleFinish = useCallback(()=>{
+    const ans = answersRef.current;
+    setFinished(true);
+    const res = calcScore(ans, questions);
+    onFinish(serie.id, res, ans);
+    setShowResults(true);
+  },[questions, serie.id, onFinish]);
+
+  const handleFinishRef = useRef(handleFinish);
+  useEffect(()=>{ handleFinishRef.current = handleFinish; },[handleFinish]);
+
   useEffect(()=>{
     if(finished) return;
-    const t = setInterval(()=>setTimeLeft(tl=>{ if(tl<=1){clearInterval(t);handleFinish(answers);return 0;} return tl-1; }),1000);
+    const t = setInterval(()=>setTimeLeft(tl=>{
+      if(tl<=1){ clearInterval(t); handleFinishRef.current(); return 0; }
+      return tl-1;
+    }),1000);
     return ()=>clearInterval(t);
   },[finished]);
 
@@ -1115,16 +1126,8 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
     setAnswers(a=>({...a,[current]:idx}));
   };
 
-  const handleFinish = useCallback((ans=answers)=>{
-    setFinished(true);
-    const res = calcScore(ans, questions);
-    onFinish(serie.id, res, ans);
-    setShowResults(true);
-  },[answers,questions,serie.id,onFinish]);
-
   const result = finished ? calcScore(answers,questions) : null;
 
-  // Audio for CO
   useEffect(()=>{
     if(serie.type==="CO"&&serie.audioUrl&&audioRef.current) {
       audioRef.current.src = serie.audioUrl;
@@ -1389,7 +1392,6 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
         </div>
       </div>
       {/* MODAL PAIEMENT */}
-      {showPayment&&<PaymentModal onClose={()=>setShowPayment(false)} onRegister={()=>setShowPayment(false)}/>}
     </div>
   );
 }
@@ -1485,13 +1487,7 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const paysInfo = getPays(form.pays);
   const initials = form.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase()||"?";
 
-  // Composant input local — nommé PF pour éviter conflit avec Field global
-  const PF = ({label,k,type="text",placeholder}) => (
-    <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
-      <input className="inp" type={type} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={placeholder||label}/>
-    </div>
-  );
+
 
   return (
     <div style={{maxWidth:680,margin:"0 auto",padding:"32px"}}>
@@ -1551,10 +1547,10 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
       <div className="card" style={{padding:24,marginBottom:14}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:16}}>Informations personnelles</h3>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Nom et Prénom" k="nom" placeholder="Votre nom complet"/>
-          <PF label="Adresse email" k="email" type="email" placeholder="votre@email.com"/>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Nom et Prénom</label><input className="inp" type="text" value={form.nom||""} onChange={e=>upd("nom",e.target.value)} placeholder="Votre nom complet"/></div>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Adresse email</label><input className="inp" type="email" value={form.email||""} onChange={e=>upd("email",e.target.value)} placeholder="votre@email.com"/></div>
         </div>
-        <PF label="Adresse / Ville" k="adresse" placeholder="Ville, Province, Canada"/>
+        <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Adresse / Ville</label><input className="inp" type="text" value={form.adresse||""} onChange={e=>upd("adresse",e.target.value)} placeholder="Ville, Province, Canada"/></div>
         <div style={{marginBottom:14}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Pays de résidence</label>
           <select className="inp" value={form.pays} onChange={e=>upd("pays",e.target.value)}>
@@ -1562,8 +1558,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
           </select>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Téléphone" k="tel" placeholder="+1 514 000-0000"/>
-          <PF label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000"/>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Téléphone</label><input className="inp" type="text" value={form.tel||""} onChange={e=>upd("tel",e.target.value)} placeholder="+1 514 000-0000"/></div>
+          <div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>WhatsApp</label><input className="inp" type="text" value={form.whatsapp||""} onChange={e=>upd("whatsapp",e.target.value)} placeholder="+1 514 000-0000"/></div>
         </div>
       </div>
 
@@ -2838,6 +2834,44 @@ function AdminPacksEditor({packs,onSave}) {
 /* ═══════════════════════════════════════════════════════════════
    ADMIN PANEL
 ═══════════════════════════════════════════════════════════════ */
+function SeriesTable({list,typeLabel,typeKey,setModal}) {
+  return (
+    <div style={{marginBottom:32}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK}}>{typeKey==="CE"?"📖":"🎧"} {typeLabel} <span style={{fontSize:14,color:GRAY,fontWeight:400}}>({list.length}/40)</span></h3>
+          <p style={{fontSize:12,color:GRAY}}>{list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</p>
+        </div>
+        <button className="btn btn-p btn-sm" onClick={()=>setModal({type:"create",serieType:typeKey})}>+ Nouvelle série</button>
+      </div>
+      {list.length===0 ? (
+        <div style={{textAlign:"center",padding:"28px",background:"#fff",border:`1.5px dashed ${BORDER}`,borderRadius:12,color:GRAY,fontSize:13}}>
+          Aucune série. Cliquez sur "+ Nouvelle série" pour commencer.
+        </div>
+      ) : (
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {list.map((s,i)=>(
+            <div key={s.id} style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:11,padding:"13px 16px",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:32,height:32,borderRadius:8,background:GS,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:BLUE,flexShrink:0}}>{i+1}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
+                  <span style={{fontSize:13,fontWeight:600,color:DARK,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</span>
+                  <span className="tag" style={{background:s.premium?G:"rgba(5,150,105,0.1)",color:s.premium?"#fff":"#059669",fontSize:9,flexShrink:0}}>{s.premium?"⭐ Premium":"Gratuit"}</span>
+                </div>
+                <div style={{fontSize:11,color:GRAY}}>{s.questions?.length||0} questions · {typeKey==="CE"?"60 min":"35 min"} · 699 pts{s.audioUrl?" · 🎧 Audio":"" }</div>
+              </div>
+              <div style={{display:"flex",gap:6,flexShrink:0}}>
+                <button onClick={()=>setModal({type:"edit",serie:s,serieType:typeKey})} style={{padding:"5px 10px",border:`1.5px solid ${BORDER}`,borderRadius:7,background:"#fff",fontSize:11,cursor:"pointer",color:GRAY,fontFamily:"'DM Sans',sans-serif"}}>✏️ Modifier</button>
+                <button onClick={()=>setModal({type:"delete",serie:s})} style={{padding:"5px 10px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,packs,setPacks,avantages,setAvantages,testimonials,setTestimonials,onLogout}) {
   const [tab,  setTab]   = useState("dashboard");
   const [modal,setModal] = useState(null);
@@ -2900,41 +2934,6 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
       .catch(()=>showToast("Erreur lors de la suppression.","error"));
   };
 
-  const SeriesTable = ({list,typeLabel,typeKey}) => (
-    <div style={{marginBottom:32}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <div>
-          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK}}>{typeKey==="CE"?"📖":"🎧"} {typeLabel} <span style={{fontSize:14,color:GRAY,fontWeight:400}}>({list.length}/40)</span></h3>
-          <p style={{fontSize:12,color:GRAY}}>{list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</p>
-        </div>
-        <button className="btn btn-p btn-sm" onClick={()=>setModal({type:"create",serieType:typeKey})}>+ Nouvelle série</button>
-      </div>
-      {list.length===0 ? (
-        <div style={{textAlign:"center",padding:"28px",background:"#fff",border:`1.5px dashed ${BORDER}`,borderRadius:12,color:GRAY,fontSize:13}}>
-          Aucune série. Cliquez sur "+ Nouvelle série" pour commencer.
-        </div>
-      ) : (
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {list.map((s,i)=>(
-            <div key={s.id} style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:11,padding:"13px 16px",display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:32,height:32,borderRadius:8,background:GS,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:BLUE,flexShrink:0}}>{i+1}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
-                  <span style={{fontSize:13,fontWeight:600,color:DARK,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</span>
-                  <span className="tag" style={{background:s.premium?G:"rgba(5,150,105,0.1)",color:s.premium?"#fff":"#059669",fontSize:9,flexShrink:0}}>{s.premium?"⭐ Premium":"Gratuit"}</span>
-                </div>
-                <div style={{fontSize:11,color:GRAY}}>{s.questions?.length||0} questions · {typeKey==="CE"?"60 min":"35 min"} · 699 pts{s.audioUrl?" · 🎧 Audio":"" }</div>
-              </div>
-              <div style={{display:"flex",gap:6,flexShrink:0}}>
-                <button onClick={()=>setModal({type:"edit",serie:s,serieType:typeKey})} style={{padding:"5px 10px",border:`1.5px solid ${BORDER}`,borderRadius:7,background:"#fff",fontSize:11,cursor:"pointer",color:GRAY,fontFamily:"'DM Sans',sans-serif"}}>✏️ Modifier</button>
-                <button onClick={()=>setModal({type:"delete",serie:s})} style={{padding:"5px 10px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 
   const ADMIN_NAV = [
     {id:"dashboard",icon:"📊",label:"Tableau de bord"},
@@ -3045,8 +3044,8 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
               <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:DARK,marginBottom:3}}>Gestion des Séries</h1>
               <p style={{fontSize:13,color:GRAY}}>Créez, modifiez et organisez les séries TCF Canada</p>
             </div>
-            <SeriesTable list={ceSeries} typeLabel="Compréhension Écrite" typeKey="CE"/>
-            <SeriesTable list={coSeries} typeLabel="Compréhension Orale" typeKey="CO"/>
+            <SeriesTable list={ceSeries} typeLabel="Compréhension Écrite" typeKey="CE" setModal={setModal}/>
+            <SeriesTable list={coSeries} typeLabel="Compréhension Orale" typeKey="CO" setModal={setModal}/>
           </div>
         )}
 
