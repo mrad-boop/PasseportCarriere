@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { CSS, LS, API, INIT_USERS, SAMPLE_CE, SAMPLE_CO, INIT_SITE_CONFIG, INIT_PACKS, INIT_AVANTAGES, INIT_TESTIMONIALS, apiGet, apiPost } from "./constants.js";
+import { CSS, LS, API, INIT_USERS, SAMPLE_CE, SAMPLE_CO, INIT_SITE_CONFIG, INIT_PACKS, INIT_AVANTAGES, INIT_TESTIMONIALS, apiGet, apiPost } from "./constants.jsx";
 import LandingPage from "./LandingPage.jsx";
 import { LoginPage, RegisterPage } from "./AuthPages.jsx";
 import UserDashboard from "./UserDashboard.jsx";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, LANDING_CSS, Grad, CV_QUOTAS, RANK_LABELS, INIT_PACKS } from "./constants.js";
+import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, LANDING_CSS, Grad, CV_QUOTAS, RANK_LABELS, INIT_PACKS } from "./constants.jsx";
 
 function LandingPage({onLogin,onRegister,siteConfig,packs,avantages,testimonials,registerSuccess,onCloseSuccess}) {
   const [activeLevel,setActiveLevel] = useState("B2");

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, Modal, Toast, RANK_LABELS, CV_QUOTAS, API, apiGet, apiPost, formatTime } from "./constants.js";
+import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, Modal, Toast, RANK_LABELS, CV_QUOTAS, API, apiGet, apiPost, formatTime } from "./constants.jsx";
 import { SeriesList, ExamEngine } from "./ExamEngine.jsx";
 import PaymentModal from "./PaymentModal.jsx";
 import ProfilTab from "./ProfilTab.jsx";

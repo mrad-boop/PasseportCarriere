@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, Modal, Toast, ImageUpload, AudioUpload, RANK_LABELS, API, apiGet, apiPost, formatTime } from "./constants.js";
+import { G, GS, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, Spinner, Modal, Toast, ImageUpload, AudioUpload, RANK_LABELS, API, apiGet, apiPost, formatTime } from "./constants.jsx";
 
 function QuestionEditor({question,index,onChange,onRemove,type}) {
   const q = question;

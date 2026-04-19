@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { G, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, CV_QUOTAS, RANK_LABELS, API, apiGet, apiPost } from "./constants.js";
+import { G, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, CV_QUOTAS, RANK_LABELS, API, apiGet, apiPost } from "./constants.jsx";
 
 function CvS({label,children}) {
   return (

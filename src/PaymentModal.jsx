@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { G, BLUE, DARK, GRAY, BORDER, BG, Modal, INIT_PACKS } from "./constants.js";
+import { G, BLUE, DARK, GRAY, BORDER, BG, Modal, INIT_PACKS } from "./constants.jsx";
 
 function PaymentModal({onClose}) {
   const [selectedPack,setSelectedPack] = useState(null);
