@@ -1083,47 +1083,27 @@ function SeriesList({type,series,isPremium,attempts,onStart}) {
    EXAM ENGINE
 ═══════════════════════════════════════════════════════════════ */
 function ExamEngine({serie,isPremium,onFinish,onAbort}) {
-  const timeLimit = serie.type==="CE"?60*60:35*60;
+  const timeLimit = serie.type==="CE"?60*60:35*60; // seconds
   const [current,setCurrent]  = useState(0);
   const [answers, setAnswers]  = useState({});
   const [timeLeft,setTimeLeft] = useState(timeLimit);
   const [finished,setFinished] = useState(false);
   const [showResults,setShowResults] = useState(false);
   const [showDetail,setShowDetail] = useState(false);
-  const audioRef    = useRef(null);
-  const answersRef  = useRef({});
-  const finishedRef = useRef(false);
+  const audioRef = useRef(null);
 
   const questions = serie.questions || [];
   const q = questions[current];
 
-  // ── 1. handleFinish défini EN PREMIER avant tout useEffect ──
-  const handleFinish = useCallback((ans)=>{
-    if(finishedRef.current) return;
-    finishedRef.current = true;
-    const finalAns = (ans !== undefined && ans !== null) ? ans : answersRef.current;
-    setFinished(true);
-    const res = calcScore(finalAns, questions);
-    onFinish(serie.id, res, finalAns);
-    setShowResults(true);
-  },[questions, serie.id, onFinish]);
+  // Log de diagnostic — à retirer après debug
+  useEffect(()=>{
+    console.log("[PC] ExamEngine monté →", serie.id, "| type:", serie.type, "| questions:", questions.length, "| q[0]:", questions[0]?.text?.substring(0,40));
+  },[]);
 
-  // Ref vers handleFinish pour le timer (évite stale closure)
-  const handleFinishRef = useRef(handleFinish);
-  useEffect(()=>{ handleFinishRef.current = handleFinish; },[handleFinish]);
-
-  // Synchro answersRef
-  useEffect(()=>{ answersRef.current = answers; },[answers]);
-
-  // ── 2. Timer (utilise ref, pas handleFinish directement) ──
+  // Timer
   useEffect(()=>{
     if(finished) return;
-    const t = setInterval(()=>{
-      setTimeLeft(tl=>{
-        if(tl <= 1){ clearInterval(t); handleFinishRef.current(); return 0; }
-        return tl - 1;
-      });
-    }, 1000);
+    const t = setInterval(()=>setTimeLeft(tl=>{ if(tl<=1){clearInterval(t);handleFinish(answers);return 0;} return tl-1; }),1000);
     return ()=>clearInterval(t);
   },[finished]);
 
@@ -1134,6 +1114,13 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
     if(finished) return;
     setAnswers(a=>({...a,[current]:idx}));
   };
+
+  const handleFinish = useCallback((ans=answers)=>{
+    setFinished(true);
+    const res = calcScore(ans, questions);
+    onFinish(serie.id, res, ans);
+    setShowResults(true);
+  },[answers,questions,serie.id,onFinish]);
 
   const result = finished ? calcScore(answers,questions) : null;
 
@@ -1402,6 +1389,7 @@ function ExamEngine({serie,isPremium,onFinish,onAbort}) {
         </div>
       </div>
       {/* MODAL PAIEMENT */}
+      {showPayment&&<PaymentModal onClose={()=>setShowPayment(false)} onRegister={()=>setShowPayment(false)}/>}
     </div>
   );
 }
@@ -1463,6 +1451,16 @@ function PaymentModal({onClose}) {
 /* ═══════════════════════════════════════════════════════════════
    PROFIL TAB — Editable
 ═══════════════════════════════════════════════════════════════ */
+/* ── PF : champ profil (sorti de ProfilTab pour éviter perte de focus) ── */
+function PF({label,k,type="text",placeholder,form,upd}) {
+  return (
+    <div style={{marginBottom:14}}>
+      <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
+      <input className="inp" type={type} value={form[k]||""} onChange={e=>upd(k,e.target.value)} placeholder={placeholder||label}/>
+    </div>
+  );
+}
+
 function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const [form,setForm]   = useState({
     nom:    user.nom||"",
@@ -1498,12 +1496,6 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
   const initials = form.nom.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase()||"?";
 
   // Composant input local — nommé PF pour éviter conflit avec Field global
-  const PF = ({label,k,type="text",placeholder}) => (
-    <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>{label}</label>
-      <input className="inp" type={type} value={form[k]} onChange={e=>upd(k,e.target.value)} placeholder={placeholder||label}/>
-    </div>
-  );
 
   return (
     <div style={{maxWidth:680,margin:"0 auto",padding:"32px"}}>
@@ -1563,10 +1555,10 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
       <div className="card" style={{padding:24,marginBottom:14}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:16,fontWeight:700,color:DARK,marginBottom:16}}>Informations personnelles</h3>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Nom et Prénom" k="nom" placeholder="Votre nom complet"/>
-          <PF label="Adresse email" k="email" type="email" placeholder="votre@email.com"/>
+          <PF label="Nom et Prénom" k="nom" placeholder="Votre nom complet" form={form} upd={upd}/>
+          <PF label="Adresse email" k="email" type="email" placeholder="votre@email.com" form={form} upd={upd}/>
         </div>
-        <PF label="Adresse / Ville" k="adresse" placeholder="Ville, Province, Canada"/>
+        <PF label="Adresse / Ville" k="adresse" placeholder="Ville, Province, Canada" form={form} upd={upd}/>
         <div style={{marginBottom:14}}>
           <label style={{display:"block",fontSize:11,fontWeight:700,color:DARK,marginBottom:5,textTransform:"uppercase",letterSpacing:.4}}>Pays de résidence</label>
           <select className="inp" value={form.pays} onChange={e=>upd("pays",e.target.value)}>
@@ -1574,8 +1566,8 @@ function ProfilTab({user,isPremium,attempts,onUpdate,onUpgrade}) {
           </select>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <PF label="Téléphone" k="tel" placeholder="+1 514 000-0000"/>
-          <PF label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000"/>
+          <PF label="Téléphone" k="tel" placeholder="+1 514 000-0000" form={form} upd={upd}/>
+          <PF label="WhatsApp" k="whatsapp" placeholder="+1 514 000-0000" form={form} upd={upd}/>
         </div>
       </div>
 
@@ -1627,6 +1619,18 @@ const CV_DEFAULT = {
   langues: [{ langue:"", niveau:"" }],
   references:"",
 };
+
+/* ── S : wrapper section CV (sorti de GenerateurCV pour éviter perte de focus) ── */
+function CvSection({label,children}) {
+  return (
+    <div style={{marginBottom:20}}>
+      <div style={{fontSize:12,fontWeight:700,color:BLUE,marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+        <div style={{width:3,height:14,background:G,borderRadius:2}}/>{label}
+      </div>
+      {children}
+    </div>
+  );
+}
 
 function GenerateurCV({user, isPremium}) {
   const [form,     setForm]     = useState(CV_DEFAULT);
@@ -1818,14 +1822,6 @@ function GenerateurCV({user, isPremium}) {
   );
 
   const inp = {width:"100%",padding:"8px 11px",border:`1.5px solid ${BORDER}`,borderRadius:8,fontSize:12,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#fff",color:DARK,boxSizing:"border-box"};
-  const S = ({label,children}) => (
-    <div style={{marginBottom:20}}>
-      <div style={{fontSize:12,fontWeight:700,color:BLUE,marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
-        <div style={{width:3,height:14,background:G,borderRadius:2}}/>{label}
-      </div>
-      {children}
-    </div>
-  );
 
   return (
     <div style={{padding:"24px 20px",maxWidth:860,margin:"0 auto"}}>
@@ -1908,7 +1904,7 @@ function GenerateurCV({user, isPremium}) {
       {/* Formulaire */}
       <div className="card" style={{padding:22}}>
 
-        <S label="Informations personnelles">
+        <CvSection label="Informations personnelles">
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
             {[["Prénom","prenom",""],["Nom","nom",""],["Titre / Poste visé","titre","Ex: Éducatrice de la petite enfance"],["Email","email",""],["Téléphone","telephone","+1 514 000-0000"],["Adresse","adresse","Ville, Province, Canada"]].map(([l,k,ph])=>(
               <div key={k}>
@@ -1917,14 +1913,14 @@ function GenerateurCV({user, isPremium}) {
               </div>
             ))}
           </div>
-        </S>
+        </CvSection>
 
-        <S label="Résumé professionnel">
+        <CvSection label="Résumé professionnel">
           <textarea style={{...inp,minHeight:90,resize:"vertical"}} value={form.resume} onChange={e=>upd("resume",e.target.value)} placeholder="Décrivez votre profil professionnel, vos années d'expérience et votre objectif de carrière au Canada..."/>
           <div style={{fontSize:10,color:GRAY,marginTop:4}}><em>Laisser vide si vous préférez ne pas inclure de résumé</em></div>
-        </S>
+        </CvSection>
 
-        <S label="Expériences professionnelles">
+        <CvSection label="Expériences professionnelles">
           {form.experiences.map((exp,i)=>(
             <div key={i} style={{background:BG,borderRadius:10,padding:14,marginBottom:10,border:`1px solid ${BORDER}`}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:8}}>
@@ -1970,9 +1966,9 @@ function GenerateurCV({user, isPremium}) {
           ))}
           <button onClick={()=>addArr("experiences",{poste:"",entreprise:"",lieu:"",debutMois:"",debutAnnee:"",finMois:"",finAnnee:"",taches:[""]})} className="btn btn-o btn-sm">+ Ajouter une expérience</button>
           <div style={{fontSize:10,color:GRAY,marginTop:6}}><em>Les expériences sans poste ni entreprise ne seront pas incluses dans le CV</em></div>
-        </S>
+        </CvSection>
 
-        <S label="Formation & Éducation">
+        <CvSection label="Formation & Éducation">
           {form.formations.map((f,i)=>(
             <div key={i} style={{background:BG,borderRadius:10,padding:14,marginBottom:10,border:`1px solid ${BORDER}`}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
@@ -1995,19 +1991,19 @@ function GenerateurCV({user, isPremium}) {
           ))}
           <button onClick={()=>addArr("formations",{diplome:"",etablissement:"",lieu:"",mois:"",annee:""})} className="btn btn-o btn-sm">+ Ajouter une formation</button>
           <div style={{fontSize:10,color:GRAY,marginTop:6}}><em>Les formations sans diplôme ne seront pas incluses dans le CV</em></div>
-        </S>
+        </CvSection>
 
-        <S label="Certifications & Formation continue">
+        <CvSection label="Certifications & Formation continue">
           <textarea style={{...inp,minHeight:100,resize:"vertical"}} value={form.certifications} onChange={e=>upd("certifications",e.target.value)} placeholder={"Titre de la certification – Organisme – MM/AAAA\nTitre de la certification – Organisme – MM/AAAA\n..."}/>
           <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une certification par ligne — elles seront listées avec • dans le CV &nbsp;·&nbsp; <em>Laisser vide si non applicable</em></div>
-        </S>
+        </CvSection>
 
-        <S label="Compétences">
+        <CvSection label="Compétences">
           <textarea style={{...inp,minHeight:80,resize:"vertical"}} value={form.competences} onChange={e=>upd("competences",e.target.value)} placeholder={"Votre compétence 1\nVotre compétence 2\nVotre compétence 3\n..."}/>
           <div style={{fontSize:10,color:GRAY,marginTop:4}}>Une compétence par ligne &nbsp;·&nbsp; <em>Laisser vide si non applicable</em></div>
-        </S>
+        </CvSection>
 
-        <S label="Langues">
+        <CvSection label="Langues">
           {form.langues.map((l,i)=>(
             <div key={i} style={{display:"flex",gap:9,marginBottom:7,alignItems:"center"}}>
               <input style={{...inp,flex:"0 0 140px"}} value={l.langue} onChange={e=>updArr("langues",i,"langue",e.target.value)} placeholder="Français"/>
@@ -2017,12 +2013,12 @@ function GenerateurCV({user, isPremium}) {
           ))}
           <button onClick={()=>addArr("langues",{langue:"",niveau:""})} className="btn btn-o btn-sm">+ Ajouter une langue</button>
           <div style={{fontSize:10,color:GRAY,marginTop:6}}><em>Les langues sans nom ne seront pas incluses dans le CV</em></div>
-        </S>
+        </CvSection>
 
-        <S label="Références">
+        <CvSection label="Références">
           <input style={inp} value={form.references} onChange={e=>upd("references",e.target.value)} placeholder="Disponible sur demande / Available upon request"/>
           <div style={{fontSize:10,color:GRAY,marginTop:4}}><em>Laisser vide pour afficher "Disponible sur demande" automatiquement</em></div>
-        </S>
+        </CvSection>
 
         <div style={{display:"flex",justifyContent:"center",gap:12,paddingTop:16,flexWrap:"wrap"}}>
           <button className="btn btn-p" onClick={generatePDF} disabled={quota===0||cvCount>=quota} style={{padding:"11px 30px",fontSize:13,opacity:quota===0||cvCount>=quota?0.4:1}}>
@@ -2090,19 +2086,23 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
 
   const startSerie = async (serie, type) => {
     setSerieError(null);
+    console.log("[PC] startSerie →", serie.id, "| questions:", serie.questions?.length, "| type:", serie.type || type);
 
     // Cas 1 : questions déjà en mémoire → on lance directement
     if(serie.questions && serie.questions.length > 0){
       const s = {...serie, type: serie.type || type};
+      console.log("[PC] Cas 1 — questions en mémoire, setActiveSerie →", s.id, s.questions.length, "questions");
       setActiveSerie(s);
       setExamType(type);
       return;
     }
     // Cas 2 : besoin de charger depuis le backend
+    console.log("[PC] Cas 2 — fetch /api/series/", serie.id);
     setSerieLoading(true);
     try {
       const full = await apiGet(`/api/series/${serie.id}`);
       setSerieLoading(false);
+      console.log("[PC] Réponse backend →", full?.id, "| questions:", full?.questions?.length, "| error:", full?.error);
       if(full && !full.error && Array.isArray(full.questions) && full.questions.length > 0){
         const enriched = {...full, type: full.type || type};
         setActiveSerie(enriched);
@@ -2842,6 +2842,45 @@ function AdminPacksEditor({packs,onSave}) {
 /* ═══════════════════════════════════════════════════════════════
    ADMIN PANEL
 ═══════════════════════════════════════════════════════════════ */
+/* ── SeriesTable : retiré de AdminPanel pour éviter perte de focus ── */
+function SeriesTable({list,typeLabel,typeKey,setModal,deleteSerieAdmin}) {
+  return (
+    <div style={{marginBottom:32}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK}}>{typeKey==="CE"?"📖":"🎧"} {typeLabel} <span style={{fontSize:14,color:GRAY,fontWeight:400}}>({list.length}/40)</span></h3>
+          <p style={{fontSize:12,color:GRAY}}>{list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</p>
+        </div>
+        <button className="btn btn-p btn-sm" onClick={()=>setModal({type:"create",serieType:typeKey})}>+ Nouvelle série</button>
+      </div>
+      {list.length===0 ? (
+        <div style={{textAlign:"center",padding:"28px",background:"#fff",border:`1.5px dashed ${BORDER}`,borderRadius:12,color:GRAY,fontSize:13}}>
+          Aucune série. Cliquez sur &quot;+ Nouvelle série&quot; pour commencer.
+        </div>
+      ) : (
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {list.map((s,i)=>(
+            <div key={s.id} style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:11,padding:"13px 16px",display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:32,height:32,borderRadius:8,background:GS,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:BLUE,flexShrink:0}}>{i+1}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
+                  <span style={{fontSize:13,fontWeight:600,color:DARK,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</span>
+                  <span className="tag" style={{background:s.premium?G:"rgba(5,150,105,0.1)",color:s.premium?"#fff":"#059669",fontSize:9,flexShrink:0}}>{s.premium?"⭐ Premium":"Gratuit"}</span>
+                </div>
+                <div style={{fontSize:11,color:GRAY}}>{s.questions?.length||0} questions · {typeKey==="CE"?"60 min":"35 min"} · 699 pts{s.audioUrl?" · 🎧 Audio":""}</div>
+              </div>
+              <div style={{display:"flex",gap:6,flexShrink:0}}>
+                <button onClick={()=>setModal({type:"edit",serie:s,serieType:typeKey})} style={{padding:"5px 10px",border:`1.5px solid ${BORDER}`,borderRadius:7,background:"#fff",fontSize:11,cursor:"pointer",color:GRAY,fontFamily:"'DM Sans',sans-serif"}}>✏️ Modifier</button>
+                <button onClick={()=>setModal({type:"delete",serie:s})} style={{padding:"5px 10px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,packs,setPacks,avantages,setAvantages,testimonials,setTestimonials,onLogout}) {
   const [tab,  setTab]   = useState("dashboard");
   const [modal,setModal] = useState(null);
@@ -2904,41 +2943,6 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
       .catch(()=>showToast("Erreur lors de la suppression.","error"));
   };
 
-  const SeriesTable = ({list,typeLabel,typeKey}) => (
-    <div style={{marginBottom:32}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <div>
-          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:18,fontWeight:700,color:DARK}}>{typeKey==="CE"?"📖":"🎧"} {typeLabel} <span style={{fontSize:14,color:GRAY,fontWeight:400}}>({list.length}/40)</span></h3>
-          <p style={{fontSize:12,color:GRAY}}>{list.filter(s=>!s.premium).length} gratuites · {list.filter(s=>s.premium).length} premium</p>
-        </div>
-        <button className="btn btn-p btn-sm" onClick={()=>setModal({type:"create",serieType:typeKey})}>+ Nouvelle série</button>
-      </div>
-      {list.length===0 ? (
-        <div style={{textAlign:"center",padding:"28px",background:"#fff",border:`1.5px dashed ${BORDER}`,borderRadius:12,color:GRAY,fontSize:13}}>
-          Aucune série. Cliquez sur "+ Nouvelle série" pour commencer.
-        </div>
-      ) : (
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {list.map((s,i)=>(
-            <div key={s.id} style={{background:"#fff",border:`1.5px solid ${BORDER}`,borderRadius:11,padding:"13px 16px",display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:32,height:32,borderRadius:8,background:GS,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:BLUE,flexShrink:0}}>{i+1}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:2}}>
-                  <span style={{fontSize:13,fontWeight:600,color:DARK,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.title}</span>
-                  <span className="tag" style={{background:s.premium?G:"rgba(5,150,105,0.1)",color:s.premium?"#fff":"#059669",fontSize:9,flexShrink:0}}>{s.premium?"⭐ Premium":"Gratuit"}</span>
-                </div>
-                <div style={{fontSize:11,color:GRAY}}>{s.questions?.length||0} questions · {typeKey==="CE"?"60 min":"35 min"} · 699 pts{s.audioUrl?" · 🎧 Audio":"" }</div>
-              </div>
-              <div style={{display:"flex",gap:6,flexShrink:0}}>
-                <button onClick={()=>setModal({type:"edit",serie:s,serieType:typeKey})} style={{padding:"5px 10px",border:`1.5px solid ${BORDER}`,borderRadius:7,background:"#fff",fontSize:11,cursor:"pointer",color:GRAY,fontFamily:"'DM Sans',sans-serif"}}>✏️ Modifier</button>
-                <button onClick={()=>setModal({type:"delete",serie:s})} style={{padding:"5px 10px",border:"1.5px solid rgba(220,38,38,0.3)",borderRadius:7,background:"rgba(220,38,38,0.05)",fontSize:11,cursor:"pointer",color:"#dc2626",fontFamily:"'DM Sans',sans-serif"}}>🗑</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 
   const ADMIN_NAV = [
     {id:"dashboard",icon:"📊",label:"Tableau de bord"},
@@ -3049,8 +3053,8 @@ function AdminPanel({users,setUsers,series,setSeries,siteConfig,setSiteConfig,pa
               <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:26,fontWeight:900,color:DARK,marginBottom:3}}>Gestion des Séries</h1>
               <p style={{fontSize:13,color:GRAY}}>Créez, modifiez et organisez les séries TCF Canada</p>
             </div>
-            <SeriesTable list={ceSeries} typeLabel="Compréhension Écrite" typeKey="CE"/>
-            <SeriesTable list={coSeries} typeLabel="Compréhension Orale" typeKey="CO"/>
+            <SeriesTable list={ceSeries} typeLabel="Compréhension Écrite" typeKey="CE" setModal={setModal} deleteSerieAdmin={deleteSerieAdmin}/>
+            <SeriesTable list={coSeries} typeLabel="Compréhension Orale" typeKey="CO" setModal={setModal} deleteSerieAdmin={deleteSerieAdmin}/>
           </div>
         )}
 
