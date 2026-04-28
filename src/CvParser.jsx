@@ -33,16 +33,9 @@ export default function CvParser({ onFill }) {
       const mime = getMime(file);
       let body   = {};
 
-      if (["doc","docx"].includes(ext)) {
-        // Extraire le texte côté client puis envoyer au backend
-        const mammoth   = await import("mammoth");
-        const arrayBuf  = await file.arrayBuffer();
-        const result    = await mammoth.extractRawText({ arrayBuffer: arrayBuf });
-        body = { textContent: result.value };
-      } else {
-        const b64 = await toBase64(file);
-        body = { fileBase64: b64, mimeType: mime };
-      }
+      // Tous les formats envoyés en base64 — le backend gère l'extraction
+      const b64 = await toBase64(file);
+      body = { fileBase64: b64, mimeType: mime };
 
       const parsed = await apiPost("/api/ai/parse-cv", body);
       if (!parsed || parsed.error) throw new Error(parsed?.error || "Erreur serveur");
