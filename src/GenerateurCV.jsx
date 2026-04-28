@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import CvParser from "./CvParser.jsx";
 import { G, BLUE, MAG, DARK, GRAY, BORDER, BG, CSS, Grad, CV_QUOTAS, RANK_LABELS, API, apiGet, apiPost } from "./constants.jsx";
 
 const CV_DEFAULT = {
@@ -29,6 +30,25 @@ function GenerateurCV({user, isPremium}) {
   const [font,     setFont]     = useState("Arial");
   const [useColor, setUseColor] = useState(false);
   const [saving,   setSaving]   = useState(false);
+
+  const fillFromCV = (parsed) => {
+    setForm(prev => ({
+      ...prev,
+      nom:            parsed.nom             || prev.nom,
+      prenom:         parsed.prenom          || prev.prenom,
+      email:          parsed.email           || prev.email,
+      telephone:      parsed.telephone       || prev.telephone,
+      adresse:        parsed.adresse         || prev.adresse,
+      titre:          parsed.titre           || prev.titre,
+      resume:         parsed.resume          || prev.resume,
+      competences:    parsed.competences     || prev.competences,
+      certifications: parsed.certifications  || prev.certifications,
+      references:     parsed.references      || prev.references,
+      langues:     parsed.langues?.length     ? parsed.langues     : prev.langues,
+      experiences: parsed.experiences?.length ? parsed.experiences : prev.experiences,
+      formations:  parsed.formations?.length  ? parsed.formations  : prev.formations,
+    }));
+  };
   const [saved,    setSaved]    = useState(false);
   const [loading,  setLoading]  = useState(true);
   const [cvCount,  setCvCount]  = useState(0);
@@ -300,6 +320,13 @@ function GenerateurCV({user, isPremium}) {
         <button className="btn btn-p" onClick={generatePDF} disabled={quota===0||cvCount>=quota} style={{marginLeft:"auto",padding:"9px 22px",opacity:quota===0||cvCount>=quota?0.4:1}}>
           🖨️ Générer le PDF {quota>0?`(${quota-cvCount} restant${quota-cvCount>1?"s":""})`:""}
         </button>
+      </div>
+
+      {/* Pré-remplissage automatique */}
+      <div className="card" style={{padding:20,marginBottom:16,border:`1.5px solid rgba(26,58,143,0.15)`,background:"rgba(26,58,143,0.02)"}}>
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:15,fontWeight:700,color:DARK,marginBottom:4}}>🚀 Pré-remplissage automatique</h3>
+        <p style={{fontSize:12,color:GRAY,marginBottom:14}}>Uploadez votre CV existant — l'IA extrait et pré-remplit le formulaire en quelques secondes.</p>
+        <CvParser onFill={fillFromCV}/>
       </div>
 
       {/* Formulaire */}

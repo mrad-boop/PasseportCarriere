@@ -4,6 +4,7 @@ import { SeriesList, ExamEngine } from "./ExamEngine.jsx";
 import PaymentModal from "./PaymentModal.jsx";
 import ProfilTab from "./ProfilTab.jsx";
 import GenerateurCV from "./GenerateurCV.jsx";
+import LettreMotivation from "./LettreMotivation.jsx";
 
 function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
   const [tab,setTab]         = useState("home");
@@ -119,6 +120,7 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
     {id:"ee",     icon:"✍️", label:"Expr. Écrite", soon:true},
     {id:"eo",     icon:"🗣️", label:"Expr. Orale",  soon:true},
     {id:"cv",     icon:"📄", label:"Générateur CV"},
+    {id:"lettre",  icon:"✉️",  label:"Lettre Motiv."},
     {id:"emploi", icon:"🤖", label:"Emploi IA",     soon:true},
     {id:"profil", icon:"👤", label:"Mon profil"},
   ];
@@ -270,6 +272,11 @@ function UserDashboard({user,onLogout,series,setSeries,setUsers}) {
           <div style={{maxWidth:860,margin:"0 auto",padding:"32px"}}>
             <SeriesList type="CO" series={coSeries} isPremium={isPremium} attempts={attempts} onStart={s=>startSerie(s,"CO")}/>
           </div>
+        )}
+
+        {/* Lettre de motivation */}
+        {tab==="lettre"&&(
+          <LettreMotivation user={user} isPremium={isPremium}/>
         )}
 
         {/* Générateur CV */}
